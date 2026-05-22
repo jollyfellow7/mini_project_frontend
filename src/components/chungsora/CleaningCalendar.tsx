@@ -26,12 +26,12 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
     try {
       const res = await fetchLogCalendar(viewYear, viewMonth);
       setCleanedSet(new Set(res.dates ?? []));
-      if (res.points) setMonthPoints(res.points);
+      if (typeof res.points === 'number') setMonthPoints(res.points);
     } catch {
       setCleanedSet(new Set());
       setMonthPoints(0);
     }
-  }, [viewYear, viewMonth, now, pointsProp]);
+  }, [viewYear, viewMonth]);
 
   useEffect(() => {
     deferEffect(() => {
