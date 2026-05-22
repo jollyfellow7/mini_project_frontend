@@ -35,11 +35,34 @@ export type LogCalendarResponse = {
   points: number;
 };
 
+const CALENDAR_CACHE_MS = 30_000;
+const calendarCache = new Map<string, { at: number; data: LogCalendarResponse }>();
+const calendarInFlight = new Map<string, Promise<LogCalendarResponse>>();
+
 export async function fetchLogCalendar(year: number, month: number) {
   const ym = `${year}-${String(month).padStart(2, '0')}`;
-  return fetchJson<LogCalendarResponse>(`${BASE}/calendar/${ym}`, {
+  const cached = calendarCache.get(ym);
+  const now = Date.now();
+  if (cached && now - cached.at < CALENDAR_CACHE_MS) {
+    return cached.data;
+  }
+
+  const pending = calendarInFlight.get(ym);
+  if (pending) return pending;
+
+  const request = fetchJson<LogCalendarResponse>(`${BASE}/calendar/${ym}`, {
     headers: authHeaders(),
-  });
+  })
+    .then((data) => {
+      calendarCache.set(ym, { at: Date.now(), data });
+      return data;
+    })
+    .finally(() => {
+      calendarInFlight.delete(ym);
+    });
+
+  calendarInFlight.set(ym, request);
+  return request;
 }
 
 export async function fetchLogDetail(date: string) {
