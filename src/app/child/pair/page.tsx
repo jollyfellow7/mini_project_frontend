@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
 import { verifyPairCode } from '@/lib/chungsora/clientApi';
 import { useAuthStore } from '@/lib/chungsora/authStore';
 import { setRole } from '@/lib/chungsora/role';
@@ -12,6 +12,7 @@ function ChildPairInner() {
   const router = useRouter();
   const params = useSearchParams();
   const setChildSession = useAuthStore((s) => s.setChildSession);
+  const autoTriedCodeRef = useRef('');
   const [code, setCode] = useState(() => {
     const fromUrl = params.get('code');
     return fromUrl ? fromUrl.toUpperCase().slice(0, 6) : '';
@@ -19,12 +20,14 @@ function ChildPairInner() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const connect = async () => {
+  const connect = useCallback(async (targetCode = code) => {
+    const normalizedCode = targetCode.trim().toUpperCase().slice(0, 6);
+    if (normalizedCode.length < 4) return;
     setLoading(true);
     setError('');
     setRole('child');
     try {
-      const res = await verifyPairCode(code);
+      const res = await verifyPairCode(normalizedCode);
       if (!res.ok) {
         setError(
           res.reason === 'expired'
@@ -46,7 +49,15 @@ function ChildPairInner() {
       setError('연결에 실패했습니다. 코드를 확인해 주세요.');
       setLoading(false);
     }
-  };
+  }, [code, router, setChildSession]);
+
+  useEffect(() => {
+    const fromUrl = params.get('code')?.trim().toUpperCase().slice(0, 6) ?? '';
+    if (fromUrl.length < 4 || autoTriedCodeRef.current === fromUrl) return;
+    autoTriedCodeRef.current = fromUrl;
+    setCode(fromUrl);
+    void connect(fromUrl);
+  }, [connect, params]);
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-lg flex-col px-5 py-10">
