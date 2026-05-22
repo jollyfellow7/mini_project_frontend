@@ -71,7 +71,7 @@ export default function ParentPairCodePage() {
       try {
         const st = await fetchPairCodeStatus(pair.code);
         if (cancelled) return;
-        if (st.code_used) setCodeUsed(true);
+        if (st.code_used || st.child_paired) setCodeUsed(true);
       } catch {
         /* ignore poll errors */
       }
