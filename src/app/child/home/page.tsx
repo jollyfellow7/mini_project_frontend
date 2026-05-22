@@ -17,7 +17,7 @@ export default function ChildHomePage() {
   const router = useRouter();
   const [summary, setSummary] = useState<FamilySummary | null>(null);
   const [quests, setQuests] = useState<DailyQuest[]>([]);
-  const [coachId, setCoachId] = useState<CoachCharacterId>('jiu');
+  const [coachId, setCoachId] = useState<CoachCharacterId>('mentor');
   const phase = useCleaningSessionStore((s) => s.phase);
   const inMission = phase !== 'idle' && phase !== 'unlock';
 

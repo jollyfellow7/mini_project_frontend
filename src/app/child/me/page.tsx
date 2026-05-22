@@ -5,12 +5,14 @@ import { useEffect, useState } from 'react';
 import {
   fetchFamilySummary,
   fetchPointsBalance,
-  updateFamilyProfile,
+  updatePersona,
 } from '@/lib/chungsora/clientApi';
 import { CoachCharacterPicker } from '@/components/chungsora/CoachCharacterPicker';
+import { PersonaHistorySection } from '@/components/chungsora/PersonaHistorySection';
 import {
-  COACH_CHARACTERS,
-  normalizeCoachCharacterId,
+  coachChangeAnnounce,
+  resolveEffectiveCoachId,
+  resolveEffectiveInformal,
   type CoachCharacterId,
 } from '@/lib/chungsora/coachCharacters';
 import { useCleaningSessionStore } from '@/lib/chungsora/cleaningSessionStore';
@@ -22,7 +24,8 @@ export default function ChildMePage() {
   const [name, setName] = useState('자녀');
   const [balance, setBalance] = useState(0);
   const [streak, setStreak] = useState(0);
-  const [coachId, setCoachId] = useState<CoachCharacterId>('jiu');
+  const [coachId, setCoachId] = useState<CoachCharacterId>('mentor');
+  const [informal, setInformal] = useState(false);
   const phase = useCleaningSessionStore((s) => s.phase);
   const missionActive = phase !== 'idle' && phase !== 'unlock';
   const { speak } = useCoachSpeech(true);
@@ -32,10 +35,19 @@ export default function ChildMePage() {
       .then((s) => {
         setName(s.child_display_name);
         setStreak(s.streak_days);
-        const effective = normalizeCoachCharacterId(
-          s.child_coach_character_id ?? s.effective_coach_character_id ?? s.coach_character_id,
+        const effective = resolveEffectiveCoachId(
+          s.coach_character_id,
+          s.child_coach_character_id,
+          s.effective_coach_character_id,
         );
         setCoachId(effective);
+        setInformal(resolveEffectiveInformal(effective, s.effective_informal_mode));
+        useSettingsStore
+          .getState()
+          .setCoachIds(s.coach_character_id, s.child_coach_character_id ?? null);
+        useSettingsStore
+          .getState()
+          .setCoachInformal(!!s.coach_informal_mode, s.child_coach_informal_mode ?? null);
       })
       .catch(() => undefined);
     void fetchPointsBalance()
@@ -43,20 +55,37 @@ export default function ChildMePage() {
       .catch(() => undefined);
   }, []);
 
-  const onCoachChange = async (id: CoachCharacterId) => {
+  const persist = async (id: CoachCharacterId, wantInformal: boolean, announce: boolean) => {
     if (missionActive) return;
-    setCoachId(id);
     try {
-      await updateFamilyProfile({ child_coach_character_id: id });
-      useSettingsStore.getState().setCoachIds(
-        useSettingsStore.getState().coachCharacterId,
-        id,
-      );
-      const meta = COACH_CHARACTERS[id];
-      speak(meta.changeAnnounce, { rate: meta.ttsRate });
+      const res = await updatePersona(id, wantInformal);
+      // 백엔드 폴백 동기화 (반말 미지원이면 informal_mode=false 로 내려옴)
+      const synced = !!res.informal_mode;
+      setInformal(synced);
+      useSettingsStore
+        .getState()
+        .setCoachIds(useSettingsStore.getState().coachCharacterId, id);
+      useSettingsStore
+        .getState()
+        .setCoachInformal(useSettingsStore.getState().coachInformalMode, synced);
+      if (announce) speak(coachChangeAnnounce(id, synced), { rate: 1.0 });
     } catch {
       /* 로컬만 반영 */
     }
+  };
+
+  const onCoachChange = async (id: CoachCharacterId) => {
+    if (missionActive) return;
+    setCoachId(id);
+    const want = resolveEffectiveInformal(id, informal);
+    setInformal(want);
+    await persist(id, want, true);
+  };
+
+  const onInformalChange = async (v: boolean) => {
+    if (missionActive) return;
+    setInformal(v);
+    await persist(coachId, v, false);
   };
 
   const proposalTokens = Math.floor(balance / PROPOSAL_EVERY_P);
@@ -84,12 +113,17 @@ export default function ChildMePage() {
             title="안내 친구 바꾸기"
             value={coachId}
             onChange={(id) => void onCoachChange(id)}
+            informal={informal}
+            onInformalChange={(v) => void onInformalChange(v)}
             disabled={missionActive}
           />
           {missionActive && (
             <p className="mt-2 text-xs text-[#8e8e8e]">미션 진행 중에는 바꿀 수 없어요.</p>
           )}
         </div>
+
+        {/* 변경 이력 (부모·자녀 모두 열람) */}
+        <PersonaHistorySection role="child" />
 
         <div className="ch-card divide-y divide-[#f0f2f4]">
           {[

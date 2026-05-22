@@ -40,7 +40,7 @@ class PointsApi {
 
   Future<int> earnPoints(double amount, String label) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/v1/points/earn');
-    final body = jsonEncode({'amount': amount.round(), 'label': label});
+    final reqBody = jsonEncode({'amount': amount.round(), 'label': label});
     final res = await childAuthorizedRequest(
       (token) => _client.post(
         uri,
@@ -49,17 +49,17 @@ class PointsApi {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: body,
+        body: reqBody,
       ),
     );
     if (res.statusCode != 200) throw ApiException('http_${res.statusCode}');
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    return (body['balance'] as num?)?.toInt() ?? 0;
+    final resBody = jsonDecode(res.body) as Map<String, dynamic>;
+    return (resBody['balance'] as num?)?.toInt() ?? 0;
   }
 
   Future<int> spendPoints(int won, String label) async {
     final uri = Uri.parse('${ApiConfig.baseUrl}/api/v1/points/spend');
-    final body = jsonEncode({'won': won, 'label': label});
+    final reqBody = jsonEncode({'won': won, 'label': label});
     final res = await childAuthorizedRequest(
       (token) => _client.post(
         uri,
@@ -68,12 +68,12 @@ class PointsApi {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
-        body: body,
+        body: reqBody,
       ),
     );
     if (res.statusCode != 200) throw ApiException('http_${res.statusCode}');
-    final body = jsonDecode(res.body) as Map<String, dynamic>;
-    return (body['balance'] as num?)?.toInt() ?? 0;
+    final resBody = jsonDecode(res.body) as Map<String, dynamic>;
+    return (resBody['balance'] as num?)?.toInt() ?? 0;
   }
 
   void close() => _client.close();

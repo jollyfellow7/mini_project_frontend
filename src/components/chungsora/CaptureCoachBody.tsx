@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fetchFamilySummary, patchLogMeta, uploadLogPhoto, updateFamilyProfile } from '@/lib/chungsora/clientApi';
+import { fetchFamilySummary, fetchTtsScript, patchLogMeta, uploadLogPhoto, updateFamilyProfile } from '@/lib/chungsora/clientApi';
 import {
   SLOT_COUNT,
   compareAllSlotsWithBaseline,
@@ -29,8 +29,11 @@ import { AI_MODEL_ALERT_DEFAULT, isAiModelError } from '@/lib/chungsora/modelAle
 import {
   COACH_CHARACTERS,
   resolveEffectiveCoachId,
+  resolveEffectiveInformal,
   type CoachCharacterId,
 } from '@/lib/chungsora/coachCharacters';
+import { playScriptSegments, type ScriptCancelToken } from '@/lib/chungsora/playScript';
+import { primeSfx } from '@/lib/chungsora/sfx';
 import {
   coachPausedSpeech,
   coachResumedSpeech,
@@ -90,7 +93,9 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
   const [processing, setProcessing] = useState(false);
   const [ghostAligned, setGhostAligned] = useState(false);
   const [ghostMediaFailed, setGhostMediaFailed] = useState(false);
-  const [characterId, setCharacterId] = useState<CoachCharacterId>('jiu');
+  const [characterId, setCharacterId] = useState<CoachCharacterId>('mentor');
+  const [informal, setInformal] = useState(false);
+  const scriptCancelRef = useRef<ScriptCancelToken>({ cancelled: false });
 
   const setScanResult = useCleaningSessionStore((s) => s.setScanResult);
   const setVerifyResult = useCleaningSessionStore((s) => s.setVerifyResult);
@@ -109,13 +114,13 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
   const loadBaselineUrls = useCallback(async () => {
     const s = await fetchFamilySummary();
     setCoachIds(s.coach_character_id, s.child_coach_character_id ?? null);
-    setCharacterId(
-      resolveEffectiveCoachId(
-        s.coach_character_id,
-        s.child_coach_character_id,
-        s.effective_coach_character_id,
-      ),
+    const effectiveId = resolveEffectiveCoachId(
+      s.coach_character_id,
+      s.child_coach_character_id,
+      s.effective_coach_character_id,
     );
+    setCharacterId(effectiveId);
+    setInformal(resolveEffectiveInformal(effectiveId, s.effective_informal_mode));
     const padded = padBaselineUrls(s.baseline_urls, s.baseline_url);
     setBaselineUrls(padded);
     return { summary: s, urls: padded };
@@ -130,16 +135,17 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
 
   const say = useCallback(
     (phase: Parameters<typeof getCoachLine>[1], opts?: Parameters<typeof getCoachLine>[2]) => {
-      const line = getCoachLine(characterId, phase, opts);
+      const line = getCoachLine(characterId, phase, { ...opts, informal });
       speak(line, { rate: coachMeta.ttsRate });
     },
-    [characterId, coachMeta.ttsRate, speak],
+    [characterId, coachMeta.ttsRate, speak, informal],
   );
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
+      scriptCancelRef.current.cancelled = true;
       stopCoach();
     };
   }, [stopCoach]);
@@ -161,13 +167,13 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
       const next = !prev;
       if (!next) {
         stopCoach();
-        showSubtitle(coachPausedSpeech(characterId));
+        showSubtitle(coachPausedSpeech(characterId, informal));
       } else {
-        speak(coachResumedSpeech(characterId), { rate: coachMeta.ttsRate });
+        speak(coachResumedSpeech(characterId, informal), { rate: coachMeta.ttsRate });
       }
       return next;
     });
-  }, [speak, showSubtitle, stopCoach, characterId, coachMeta.ttsRate]);
+  }, [speak, showSubtitle, stopCoach, characterId, coachMeta.ttsRate, informal]);
 
   useEffect(() => {
     deferEffect(() => {
@@ -175,15 +181,41 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
     });
   }, [loadBaselineUrls]);
 
+  // 세션 진입 시 1회: 백엔드 /tts/script 세그먼트(존댓말/반말 + ding SFX)를 순차 재생.
+  // 실패하면 로컬 mode_intro 로 폴백. 이후 슬롯별 안내는 로컬 라인이 담당.
   useEffect(() => {
     ghostReadySpokenRef.current.clear();
-    const intro = getCoachLine(characterId, 'mode_intro', { mode });
-    const t = setTimeout(() => {
-      if (coachOn) speak(intro, { rate: coachMeta.ttsRate });
-      else showSubtitle(intro);
-    }, 0);
-    return () => clearTimeout(t);
-  }, [mode, coachOn, speak, showSubtitle, characterId, coachMeta.ttsRate]);
+    scriptCancelRef.current.cancelled = true;
+    const cancel: ScriptCancelToken = { cancelled: false };
+    scriptCancelRef.current = cancel;
+    primeSfx();
+
+    let aborted = false;
+    void (async () => {
+      try {
+        const script = await fetchTtsScript(characterId, informal);
+        if (aborted || cancel.cancelled || !mountedRef.current) return;
+        // 반말 미지원 페르소나면 백엔드가 informal_mode=false 로 내려줌 → 상태 동기화
+        if (script.informal_mode !== informal) setInformal(script.informal_mode);
+        await playScriptSegments(script.segments, {
+          rate: coachMeta.ttsRate,
+          enabled: coachOn,
+          onSubtitle: (t) => showSubtitle(t),
+          cancel,
+        });
+      } catch {
+        if (aborted || cancel.cancelled || !mountedRef.current) return;
+        const intro = getCoachLine(characterId, 'mode_intro', { mode, informal });
+        if (coachOn) speak(intro, { rate: coachMeta.ttsRate });
+        else showSubtitle(intro);
+      }
+    })();
+
+    return () => {
+      aborted = true;
+      cancel.cancelled = true;
+    };
+  }, [mode, coachOn, speak, showSubtitle, characterId, coachMeta.ttsRate, informal]);
 
   const goToSlot = useCallback(
     (index: number) => {
@@ -192,14 +224,14 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
       ghostReadySpokenRef.current.add(index);
       if (mode === 'baseline' || !coachOn) return;
       if (!baselineUrls[index]) {
-        speak(getCoachLine(characterId, 'baseline_missing', { slotIndex: index }), {
+        speak(getCoachLine(characterId, 'baseline_missing', { slotIndex: index, informal }), {
           rate: coachMeta.ttsRate,
         });
         return;
       }
       say('slot_enter', { slotIndex: index });
     },
-    [mode, coachOn, baselineUrls, speak, say, characterId, coachMeta.ttsRate],
+    [mode, coachOn, baselineUrls, speak, say, characterId, coachMeta.ttsRate, informal],
   );
 
   useEffect(() => {
@@ -256,7 +288,7 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
         if (!mountedRef.current) return;
         setScanResult(monstersToQuest(res.monsters), res.pollution, res.summary);
         if (coachOn) say('before_done');
-        else showSubtitle(getCoachLine(characterId, 'before_done'));
+        else showSubtitle(getCoachLine(characterId, 'before_done', { informal }));
         if (nextHref) router.push(nextHref);
         else onComplete?.();
         return;
@@ -279,7 +311,7 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
       await patchLogMeta(todayKey, { score: res.cleanliness, streak_days: streakDays });
       if (!mountedRef.current) return;
       if (coachOn) say('after_score', { score: res.cleanliness });
-      else showSubtitle(getCoachLine(characterId, 'after_score', { score: res.cleanliness }));
+      else showSubtitle(getCoachLine(characterId, 'after_score', { score: res.cleanliness, informal }));
       if (nextHref) router.push(nextHref);
       else onComplete?.();
     } catch (e) {

@@ -71,6 +71,9 @@ export default function ParentPairCodePage() {
       try {
         const st = await fetchPairCodeStatus(pair.code);
         if (cancelled) return;
+        // code_used(이 코드가 사용됨) 또는 child_paired(기기 연결됨) 중 하나라도 true면 활성화.
+        // 부모 화면이 코드를 자동 재발급하므로, 자녀가 직전 코드로 연결하면 code_used가
+        // 갱신 안 될 수 있어 child_paired 까지 함께 확인해야 버튼이 정상 활성화된다.
         if (st.code_used || st.child_paired) setCodeUsed(true);
       } catch {
         /* ignore poll errors */
@@ -218,30 +221,4 @@ export default function ParentPairCodePage() {
             </div>
           ) : (
             <p className="text-[12px] text-[#adb5bd]">
-              자녀 폰에서 코드 입력이 끝나면 이 버튼이 활성화돼요.
-            </p>
-          )}
-
-          {confirmError ? (
-            <p className="rounded-xl bg-[#fff0f0] px-4 py-3 text-[13px] font-medium text-[#e03131]">
-              {confirmError}
-            </p>
-          ) : null}
-
-          {/* 완료 버튼 */}
-          <div className="pt-2">
-            <button
-              type="button"
-              onClick={handleConfirmPaired}
-              disabled={!codeUsed}
-              className="ch-btn-primary w-full py-4 text-[16px] font-bold disabled:opacity-40"
-            >
-              연결됐어요 ✓
-            </button>
-          </div>
-
-        </div>
-      )}
-    </div>
-  );
-}
+              자녀 폰에서 코드 입력

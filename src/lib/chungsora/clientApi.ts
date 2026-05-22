@@ -86,3 +86,17 @@ export {
   submitChildProposal,
   type ChildProposeListResponse,
 } from '@/lib/api/child/propose';
+
+export {
+  fetchTtsPersonas,
+  fetchTtsScript,
+  updatePersona,
+  fetchPersonaHistory,
+  markPersonaHistorySeen,
+  type TtsPersona,
+  type TtsScriptResponse,
+  type TtsScriptSegment,
+  type PersonaUpdateResponse,
+  type PersonaHistoryItem,
+  type PersonaHistoryResponse,
+} from '@/lib/api/tts';

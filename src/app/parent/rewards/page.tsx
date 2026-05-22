@@ -6,6 +6,7 @@ import { Suspense } from 'react';
 import { MONTHLY_CASH_CAP, wonToP } from '@/lib/chungsora/tokens';
 import { useSettingsStore } from '@/lib/chungsora/settingsStore';
 import { CoachCharacterPicker } from '@/components/chungsora/CoachCharacterPicker';
+import { PersonaHistorySection } from '@/components/chungsora/PersonaHistorySection';
 import {
   createDailyQuest,
   createShopReward,
@@ -15,12 +16,14 @@ import {
   fetchFamilySummary,
   fetchShopRewards,
   updateFamilyProfile,
+  updatePersona,
   updateShopReward,
   type DailyQuest,
   type ShopReward,
 } from '@/lib/chungsora/clientApi';
 import {
   normalizeCoachCharacterId,
+  resolveEffectiveInformal,
   type CoachCharacterId,
 } from '@/lib/chungsora/coachCharacters';
 import { deferEffect } from '@/lib/react/deferEffect';
@@ -42,7 +45,8 @@ function RewardsPageInner() {
   const [newWon, setNewWon] = useState(1000);
   const [questTitle, setQuestTitle] = useState('');
   const [showQuestForm, setShowQuestForm] = useState(searchParams.get('addQuest') === '1');
-  const [coachId, setCoachId] = useState<CoachCharacterId>('jiu');
+  const [coachId, setCoachId] = useState<CoachCharacterId>('mentor');
+  const [coachInformal, setCoachInformal] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -53,7 +57,9 @@ function RewardsPageInner() {
       ]);
       setRewards(shop.rewards);
       setQuests(q.quests);
-      setCoachId(normalizeCoachCharacterId(family.coach_character_id));
+      const fam = normalizeCoachCharacterId(family.coach_character_id);
+      setCoachId(fam);
+      setCoachInformal(resolveEffectiveInformal(fam, family.coach_informal_mode));
       if (family.base_clean_won) setBaseCleanWon(family.base_clean_won);
     } catch {
       setRewards([]);
@@ -222,12 +228,26 @@ function RewardsPageInner() {
         <div className="ch-card p-4">
           <CoachCharacterPicker
             value={coachId}
+            informal={coachInformal}
             onChange={(id) => {
               setCoachId(id);
-              void updateFamilyProfile({ coach_character_id: id }).catch(() => undefined);
+              const want = resolveEffectiveInformal(id, coachInformal);
+              setCoachInformal(want);
+              void updatePersona(id, want)
+                .then((res) => setCoachInformal(!!res.informal_mode))
+                .catch(() => undefined);
+            }}
+            onInformalChange={(v) => {
+              setCoachInformal(v);
+              void updatePersona(coachId, v)
+                .then((res) => setCoachInformal(!!res.informal_mode))
+                .catch(() => undefined);
             }}
           />
         </div>
+
+        {/* 자녀 변경 알림 + 최근 변경 이력 (부모) */}
+        <PersonaHistorySection role="parent" />
 
         <p className="text-sm font-bold text-[#1a1e22]">포인트 상점</p>
         {rewards.map((r) => (

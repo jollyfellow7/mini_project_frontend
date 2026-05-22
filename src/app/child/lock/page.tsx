@@ -23,7 +23,7 @@ export default function ChildLockPage() {
   const setAllowPhone = useSettingsStore((s) => s.setAllowPhone);
   const setCoachIds = useSettingsStore((s) => s.setCoachIds);
   const setPhase = useCleaningSessionStore((s) => s.setPhase);
-  const [coachId, setCoachId] = useState<CoachCharacterId>('jiu');
+  const [coachId, setCoachId] = useState<CoachCharacterId>('mentor');
 
   useEffect(() => {
     const sync = () => {

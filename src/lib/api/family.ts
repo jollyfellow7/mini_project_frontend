@@ -18,6 +18,10 @@ export type FamilySummary = {
   coach_character_id?: string;
   child_coach_character_id?: string | null;
   effective_coach_character_id?: string;
+  coach_informal_mode?: boolean;
+  child_coach_informal_mode?: boolean | null;
+  effective_informal_mode?: boolean;
+  persona_history_unseen?: number;
 };
 
 export async function fetchFamilySummary() {
