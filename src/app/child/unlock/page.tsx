@@ -24,10 +24,10 @@ export default function ChildUnlockPage() {
   const payout = calcCleaningPayout(baseCleanWon, score || 0, streakDays);
 
   useEffect(() => {
-    if (cleanliness <= 0) {
+    if (cleanliness <= 0 && !verifyComment) {
       router.replace('/child/mission/after');
     }
-  }, [cleanliness, router]);
+  }, [cleanliness, router, verifyComment]);
 
   useEffect(() => {
     if (!passed) return;

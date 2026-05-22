@@ -4,6 +4,10 @@ const CHILD_PUBLIC = ['/child/pair'] as const;
 /** 이미 연결된 자녀도 접근 가능 — 새 폰 교체용 */
 const CHILD_PAIR_RELINK = '/child/pair/relink';
 
+function isParentPairSetupPath(pathname: string) {
+  return pathname === '/parent/pair' || pathname.startsWith('/parent/pair/code');
+}
+
 function startsWithAny(pathname: string, prefixes: readonly string[]) {
   return prefixes.some((p) => pathname.startsWith(p));
 }
@@ -26,6 +30,10 @@ export function resolveParentAuthRedirect(
 
   if (parentLoggedIn && isPublic) {
     return getParentHomePath(onboardDone);
+  }
+
+  if (parentLoggedIn && onboardDone && isParentPairSetupPath(pathname)) {
+    return getParentHomePath(true);
   }
 
   if (!parentLoggedIn) {

@@ -285,6 +285,14 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
     } catch (e) {
       if (!mountedRef.current) return;
       const msg = e instanceof Error ? e.message : 'AI 검사에 실패했습니다.';
+      if (mode === 'after') {
+        setVerifyResult(0, msg || 'baseline 비교에 실패해 0점으로 처리했어요.');
+        await patchLogMeta(todayKey, { score: 0, streak_days: streakDays }).catch(() => undefined);
+        if (!mountedRef.current) return;
+        if (nextHref) router.push(nextHref);
+        else onComplete?.();
+        return;
+      }
       if (mode === 'baseline') resetCaptures();
       showFailure(msg);
     } finally {
