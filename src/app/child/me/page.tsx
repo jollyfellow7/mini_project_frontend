@@ -111,9 +111,6 @@ export default function ChildMePage() {
             onInformalChange={(v) => void onInformalChange(v)}
             disabled={missionActive}
           />
-          {missionActive && (
-            <p className="mt-2 text-xs text-[#8e8e8e]">미션 진행 중에는 바꿀 수 없어요.</p>
-          )}
         </div>
 
         {/* 변경 이력 (부모·자녀 모두 열람) */}
