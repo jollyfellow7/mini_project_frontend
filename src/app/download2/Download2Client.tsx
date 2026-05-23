@@ -41,53 +41,77 @@ const CHILD_FEATURES = [
 export function Download2Client() {
   const [tab, setTab] = useState<Tab>('parent');
   const [childInfo, setChildInfo] = useState<ApkVersion | null>(null);
-  const [parentApkReady, setParentApkReady] = useState(false);
-  const [childApkReady, setChildApkReady] = useState(false);
-  const [childApkSizeBytes, setChildApkSizeBytes] = useState<number | null>(null);
-  const [parentApkSizeBytes, setParentApkSizeBytes] = useState<number | null>(null);
+
+  // APK 준비 상태
+  const [parentV2ApkReady, setParentV2ApkReady] = useState(false);
+  const [parentV2ApkSizeBytes, setParentV2ApkSizeBytes] = useState<number | null>(null);
+
+  const [childV2ApkReady, setChildV2ApkReady] = useState(false);
+  const [childV2ApkSizeBytes, setChildV2ApkSizeBytes] = useState<number | null>(null);
+
+  const [childV1ApkReady, setChildV1ApkReady] = useState(false);
+  const [childV1ApkSizeBytes, setChildV1ApkSizeBytes] = useState<number | null>(null);
+
   const [origin, setOrigin] = useState('');
 
   useEffect(() => {
     deferEffect(() => setOrigin(window.location.origin));
 
-    // 자녀 Flutter APK
+    // 자녀 Flutter APK 메타
     fetch('/apk/version.json', { cache: 'no-store' })
       .then((r) => r.json())
       .then(setChildInfo)
       .catch(() => undefined);
 
+    // 부모 APKv2
+    fetch('/apk/parent-pwa-v2.apk', { method: 'HEAD', cache: 'no-store' })
+      .then((r) => {
+        setParentV2ApkReady(r.ok);
+        const len = r.headers.get('content-length');
+        if (len) setParentV2ApkSizeBytes(parseInt(len, 10));
+      })
+      .catch(() => setParentV2ApkReady(false));
+
+    // 자녀 APKv2
+    fetch('/apk/child-v2.apk', { method: 'HEAD', cache: 'no-store' })
+      .then((r) => {
+        setChildV2ApkReady(r.ok);
+        const len = r.headers.get('content-length');
+        if (len) setChildV2ApkSizeBytes(parseInt(len, 10));
+      })
+      .catch(() => setChildV2ApkReady(false));
+
+    // 자녀 APKv1 (기존 Flutter)
     fetch('/apk/app-release.apk', { method: 'HEAD', cache: 'no-store' })
       .then((r) => {
-        setChildApkReady(r.ok);
+        setChildV1ApkReady(r.ok);
         const len = r.headers.get('content-length');
-        if (len) setChildApkSizeBytes(parseInt(len, 10));
+        if (len) setChildV1ApkSizeBytes(parseInt(len, 10));
       })
-      .catch(() => setChildApkReady(false));
-
-    // 부모 PWA APK
-    fetch('/apk/parent-pwa.apk', { method: 'HEAD', cache: 'no-store' })
-      .then((r) => {
-        setParentApkReady(r.ok);
-        const len = r.headers.get('content-length');
-        if (len) setParentApkSizeBytes(parseInt(len, 10));
-      })
-      .catch(() => setParentApkReady(false));
+      .catch(() => setChildV1ApkReady(false));
   }, []);
 
-  const childSizeLabel = useMemo(
-    () => formatApkSize(childInfo?.apk_size_bytes) ?? formatApkSize(childApkSizeBytes),
-    [childInfo?.apk_size_bytes, childApkSizeBytes],
+  const parentV2SizeLabel = useMemo(
+    () => formatApkSize(parentV2ApkSizeBytes),
+    [parentV2ApkSizeBytes],
   );
 
-  const parentSizeLabel = useMemo(
-    () => formatApkSize(parentApkSizeBytes),
-    [parentApkSizeBytes],
+  const childV2SizeLabel = useMemo(
+    () => formatApkSize(childV2ApkSizeBytes),
+    [childV2ApkSizeBytes],
+  );
+
+  const childV1SizeLabel = useMemo(
+    () => formatApkSize(childInfo?.apk_size_bytes) ?? formatApkSize(childV1ApkSizeBytes),
+    [childInfo?.apk_size_bytes, childV1ApkSizeBytes],
   );
 
   const childPageUrl = origin ? `${origin}/download2` : '/download2';
-  const childApkUrl = origin ? `${origin}/apk/app-release.apk` : '/apk/app-release.apk';
-  const parentApkUrl = origin ? `${origin}/apk/parent-pwa.apk` : '/apk/parent-pwa.apk';
   const parentPageUrl = origin ? `${origin}/download2` : '/download2';
+
+  const childV1ApkUrl = origin ? `${origin}/apk/app-release.apk` : '/apk/app-release.apk';
+  const childV2ApkUrl = origin ? `${origin}/apk/child-v2.apk` : '/apk/child-v2.apk';
+  const parentV2ApkUrl = origin ? `${origin}/apk/parent-pwa-v2.apk` : '/apk/parent-pwa-v2.apk';
 
   return (
     <div className="min-h-screen bg-[#f7f9fa]">
@@ -158,25 +182,30 @@ export function Download2Client() {
               <section className="flex items-start gap-3 rounded-2xl border border-[#d0f0f5] bg-[#e8f9fc] p-4">
                 <Info size={16} className="mt-0.5 shrink-0 text-[#00B8CF]" />
                 <div>
-                  <p className="text-[13px] font-semibold text-[#0090a8]">PWA 기반 앱</p>
+                  <p className="text-[13px] font-semibold text-[#0090a8]">PWA 기반 앱 (v2)</p>
                   <p className="mt-1 text-[12px] leading-relaxed text-[#006d80]">
-                    부모 앱은 PWA(웹앱)를 Android 패키지로 변환한 버전입니다.
+                    부모 앱은 PWA(웹앱)를 Android 패키지로 변환한 v2 버전입니다.
                     웹 브라우저 없이 앱처럼 실행됩니다.
                   </p>
                 </div>
               </section>
 
-              {/* APK 카드 */}
+              {/* APK 카드 - v2 */}
               <section className="ch-card p-5">
                 <div className="flex items-start gap-4">
                   <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[rgba(0,184,207,0.12)] text-3xl">
                     👨‍👩‍👧
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-[#2f3438]">청소해라 (부모)</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-[#2f3438]">청소해라 (부모)</p>
+                      <span className="rounded-full bg-[#00B8CF] px-2 py-0.5 text-[10px] font-bold text-white">
+                        APKv2
+                      </span>
+                    </div>
                     <p className="mt-1 text-sm text-[#828c94]">
                       PWA · Android
-                      {parentSizeLabel ? ` · ${parentSizeLabel}` : ''}
+                      {parentV2SizeLabel ? ` · ${parentV2SizeLabel}` : ''}
                     </p>
                     <p className="mt-1 text-xs text-[#adb5bd]">
                       자녀 현황 관리 · 스케줄 설정 · AI 리포트
@@ -184,18 +213,18 @@ export function Download2Client() {
                   </div>
                 </div>
 
-                {parentApkReady ? (
+                {parentV2ApkReady ? (
                   <a
-                    href="/apk/parent-pwa.apk"
-                    download="chungsora-parent.apk"
+                    href="/apk/parent-pwa-v2.apk"
+                    download="chungsora-parent-v2.apk"
                     className="ch-btn-primary mt-5 flex w-full items-center justify-center gap-2 py-4 text-[15px] font-semibold"
                   >
                     <Download size={20} />
-                    부모 APK 다운로드
+                    부모 APKv2 다운로드
                   </a>
                 ) : (
                   <div className="mt-5 rounded-xl bg-[#f7f9fa] px-4 py-4 text-center text-sm text-[#828c94]">
-                    부모 APK 준비 중입니다.
+                    부모 APKv2 준비 중입니다.
                     <br />
                     <span className="mt-1 block text-xs">
                       잠시 후 다시 확인하거나, 아래 웹 버전으로 이용해 주세요.
@@ -215,8 +244,8 @@ export function Download2Client() {
               {origin && (
                 <DownloadQrPanel
                   pageUrl={parentPageUrl}
-                  apkUrl={parentApkReady ? parentApkUrl : null}
-                  apkReady={parentApkReady}
+                  apkUrl={parentV2ApkReady ? parentV2ApkUrl : null}
+                  apkReady={parentV2ApkReady}
                 />
               )}
 
@@ -252,11 +281,58 @@ export function Download2Client() {
                 ))}
               </section>
 
-              {/* DPC 안내 */}
+              {/* ── 자녀 APKv2 섹션 ── */}
+              <section className="flex items-start gap-3 rounded-2xl border border-[#d0f0f5] bg-[#e8f9fc] p-4">
+                <Info size={16} className="mt-0.5 shrink-0 text-[#00B8CF]" />
+                <div>
+                  <p className="text-[13px] font-semibold text-[#0090a8]">WebView + FCM 잠금 · 웹 UI 사용</p>
+                  <p className="mt-1 text-[12px] leading-relaxed text-[#006d80]">
+                    v2는 WebView 기반으로 웹 UI를 그대로 사용하며 FCM으로 잠금을 제어합니다.
+                  </p>
+                </div>
+              </section>
+
+              <section className="ch-card p-5">
+                <div className="flex items-start gap-4">
+                  <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[rgba(0,184,207,0.10)] text-3xl">
+                    📱
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-[#2f3438]">청소해라 (자녀)</p>
+                      <span className="rounded-full bg-[#00B8CF] px-2 py-0.5 text-[10px] font-bold text-white">
+                        신규 v2
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm text-[#828c94]">
+                      WebView + FCM
+                      {childV2SizeLabel ? ` · ${childV2SizeLabel}` : ''}
+                    </p>
+                    <p className="mt-1 text-xs text-[#adb5bd]">WebView + FCM 잠금 · 웹 UI 사용</p>
+                  </div>
+                </div>
+
+                {childV2ApkReady ? (
+                  <a
+                    href="/apk/child-v2.apk"
+                    download="chungsora-child-v2.apk"
+                    className="ch-btn-primary mt-5 flex w-full items-center justify-center gap-2 py-4 text-[15px] font-semibold"
+                  >
+                    <Download size={20} />
+                    자녀 APKv2 다운로드
+                  </a>
+                ) : (
+                  <div className="mt-5 rounded-xl bg-[#f7f9fa] px-4 py-4 text-center text-sm text-[#828c94]">
+                    자녀 APKv2 준비 중입니다.
+                  </div>
+                )}
+              </section>
+
+              {/* ── 자녀 APKv1 섹션 ── */}
               <section className="flex items-start gap-3 rounded-2xl border border-[#ffd6d9] bg-[#fff0f1] p-4">
                 <Shield size={16} className="mt-0.5 shrink-0 text-[#f04452]" />
                 <div>
-                  <p className="text-[13px] font-semibold text-[#c0202e]">Flutter 네이티브 앱 (잠금 필수)</p>
+                  <p className="text-[13px] font-semibold text-[#c0202e]">Flutter 네이티브 · 잠금 전용</p>
                   <p className="mt-1 text-[12px] leading-relaxed text-[#8b1a24]">
                     기기 잠금(DPC)은 Android 네이티브 API가 필요합니다.
                     반드시 아래 Flutter APK를 설치해야 잠금 기능이 작동합니다.
@@ -264,18 +340,22 @@ export function Download2Client() {
                 </div>
               </section>
 
-              {/* APK 카드 */}
               <section className="ch-card p-5">
                 <div className="flex items-start gap-4">
                   <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-[rgba(240,68,82,0.10)] text-3xl">
                     📱
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="font-bold text-[#2f3438]">청소해라 (자녀)</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-[#2f3438]">청소해라 (자녀)</p>
+                      <span className="rounded-full bg-[#828c94] px-2 py-0.5 text-[10px] font-bold text-white">
+                        기존
+                      </span>
+                    </div>
                     <p className="mt-1 text-sm text-[#828c94]">
                       v{childInfo?.version ?? '0.5.0'}
                       {childInfo?.build_number ? ` · build ${childInfo.build_number}` : ''}
-                      {childSizeLabel ? ` · ${childSizeLabel}` : ''}
+                      {childV1SizeLabel ? ` · ${childV1SizeLabel}` : ''}
                     </p>
                     <p className="mt-1 text-xs text-[#adb5bd]">{formatBuiltAt(childInfo?.built_at)}</p>
                     {shortCommit(childInfo?.commit) && (
@@ -286,17 +366,18 @@ export function Download2Client() {
                     {childInfo?.package && (
                       <p className="mt-0.5 font-mono text-[10px] text-[#c2c8cc]">{childInfo.package}</p>
                     )}
+                    <p className="mt-1 text-xs text-[#adb5bd]">Flutter 네이티브 · 잠금 전용</p>
                   </div>
                 </div>
 
-                {childApkReady ? (
+                {childV1ApkReady ? (
                   <a
                     href="/apk/app-release.apk"
-                    download="chungsora-child.apk"
+                    download="chungsora-child-v1.apk"
                     className="ch-btn-primary mt-5 flex w-full items-center justify-center gap-2 py-4 text-[15px] font-semibold"
                   >
                     <Download size={20} />
-                    자녀 APK 다운로드
+                    자녀 APKv1 다운로드
                   </a>
                 ) : (
                   <div className="mt-5 rounded-xl bg-[#f7f9fa] px-4 py-4 text-center text-sm text-[#828c94]">
@@ -311,8 +392,8 @@ export function Download2Client() {
               {origin && (
                 <DownloadQrPanel
                   pageUrl={childPageUrl}
-                  apkUrl={childApkReady ? childApkUrl : null}
-                  apkReady={childApkReady}
+                  apkUrl={childV1ApkReady ? childV1ApkUrl : childV2ApkReady ? childV2ApkUrl : null}
+                  apkReady={childV1ApkReady || childV2ApkReady}
                 />
               )}
 

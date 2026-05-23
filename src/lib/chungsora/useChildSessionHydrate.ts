@@ -6,6 +6,10 @@ import { tryRefreshChildSession } from '@/lib/chungsora/childSessionRefresh';
 import { useAuthStore } from '@/lib/chungsora/authStore';
 import { useSettingsStore } from '@/lib/chungsora/settingsStore';
 
+/** Shell 재마운트 시 30초 안에 다시 fetch 하지 않도록 모듈 레벨 타임스탬프 */
+let lastFetchedAt = 0;
+const COOLDOWN_MS = 30_000;
+
 /** child_session 쿠키 → zustand 동기화 + lock 정책 로드 */
 export function useChildSessionHydrate() {
   const childPaired = useAuthStore((s) => s.childPaired);
@@ -18,17 +22,23 @@ export function useChildSessionHydrate() {
   const setCoachIds = useSettingsStore((s) => s.setCoachIds);
 
   useEffect(() => {
-    const deviceId = useAuthStore.getState().childDeviceId;
-    if (deviceId) void tryRefreshChildSession();
+    const now = Date.now();
+    const stale = now - lastFetchedAt >= COOLDOWN_MS;
 
-    void fetchLockPolicy()
-      .then((p) => {
-        setLockTime(p.lock_time);
-        setLockDays(p.lock_days);
-        setPassScore(p.pass_score);
-        setAllowPhone(p.allow_phone);
-      })
-      .catch(() => undefined);
+    if (stale) {
+      lastFetchedAt = now;
+      const deviceId = useAuthStore.getState().childDeviceId;
+      if (deviceId) void tryRefreshChildSession();
+
+      void fetchLockPolicy()
+        .then((p) => {
+          setLockTime(p.lock_time);
+          setLockDays(p.lock_days);
+          setPassScore(p.pass_score);
+          setAllowPhone(p.allow_phone);
+        })
+        .catch(() => undefined);
+    }
 
     if (childPaired) return;
     void fetchFamilySummary()

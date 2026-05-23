@@ -13,6 +13,9 @@ import { useStopCoachOnLeaveCapture } from '@/lib/chungsora/coachSpeechGuard';
 import { fetchParentProposals } from '@/lib/chungsora/clientApi';
 import { getPendingThread, useProposeStore } from '@/lib/chungsora/proposeStore';
 
+let lastProposalFetch = 0;
+const PROPOSALS_COOLDOWN_MS = 30_000;
+
 const NO_NAV_PREFIXES = [
   '/parent/login',
   '/parent/signup',
@@ -40,6 +43,9 @@ export function ParentShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     setRole('parent');
+    const now = Date.now();
+    if (now - lastProposalFetch < PROPOSALS_COOLDOWN_MS) return;
+    lastProposalFetch = now;
     fetchParentProposals()
       .then((res) => {
         if (res.threads?.length) useProposeStore.setState({ threads: res.threads });
