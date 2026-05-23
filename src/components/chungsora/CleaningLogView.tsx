@@ -160,11 +160,15 @@ export function CleaningLogView({ role: roleProp, showBack, dateParam }: Cleanin
   return (
     <div className="flex min-h-[calc(100dvh-7rem)] flex-col">
       {showFireworks && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-6"
+          onClick={() => setShowFireworks(false)}
+        >
           <div className="rounded-2xl bg-white px-6 py-8 text-center shadow-lg">
             <p className="text-4xl">🎉</p>
             <p className="mt-3 text-lg font-bold text-[#2f3438]">첫 청소 로그!</p>
             <p className="mt-1 text-sm text-[#828c94]">엄마·아빠와 대화를 나눠보세요</p>
+            <p className="mt-3 text-xs text-[#828c94]">탭하면 닫혀요</p>
           </div>
         </div>
       )}

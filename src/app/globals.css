@@ -25,6 +25,11 @@ body {
   font-family: var(--font-pretendard);
 }
 
+/* 모바일 300ms 탭 딜레이 제거 + 스크롤 충돌 방지 */
+button, a {
+  touch-action: manipulation;
+}
+
 .font-pretendard {
   font-family: var(--font-pretendard);
 }

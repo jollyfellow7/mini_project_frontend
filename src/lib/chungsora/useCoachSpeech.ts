@@ -45,8 +45,11 @@ function utterance(text: string, rate = DEFAULT_RATE): SpeechSynthesisUtterance 
   return u;
 }
 
-/** iOS Safari: voices 목록·재생 깨우기 */
-function primeSpeechSynthesis(): void {
+/**
+ * iOS/Android TTS 엔진 사전 깨우기 — volume=0 무음 utterance 로 엔진 초기화.
+ * 컴포넌트 mount useEffect 에서 호출하면 실제 speak() 시 첫-클릭 묵음 현상 방지.
+ */
+export function primeSpeechSynthesis(): void {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
   window.speechSynthesis.getVoices();
   const u = new SpeechSynthesisUtterance('');

@@ -48,7 +48,7 @@ export function ChildBottomNav() {
   const proposeOn = isOn('/propose');
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#dbdbdb] bg-white safe-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-[60] border-t border-[#dbdbdb] bg-white safe-bottom">
       <div className="mx-auto flex max-w-lg items-end justify-around px-2 pt-1.5">
         {LEFT.map(({ label, href, Icon, ...rest }) => {
           const filledWhenActive = 'filledWhenActive' in rest ? rest.filledWhenActive : undefined;

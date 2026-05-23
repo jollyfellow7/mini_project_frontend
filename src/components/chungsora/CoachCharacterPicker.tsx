@@ -10,6 +10,7 @@ import {
   type CoachCharacterId,
 } from '@/lib/chungsora/coachCharacters';
 import { getCoachLine } from '@/lib/chungsora/coachLines';
+import { primeSpeechSynthesis } from '@/lib/chungsora/useCoachSpeech';
 
 type CoachCharacterPickerProps = {
   value: CoachCharacterId;
@@ -39,6 +40,8 @@ function initVoiceCache() {
   };
   update();
   window.speechSynthesis.addEventListener('voiceschanged', update);
+  // TTS 엔진 사전 깨우기 — 첫 클릭 묵음 현상(cold-start) 방지
+  primeSpeechSynthesis();
 }
 
 function pickKoVoice(): SpeechSynthesisVoice | undefined {
@@ -93,7 +96,16 @@ export function CoachCharacterPicker({
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
-    initVoiceCache(); // 음성 목록 비동기 로딩 시작
+    initVoiceCache();
+    // 탭 전환·앱 전환 시 열린 포털 자동 닫기 (stuck overlay 방지)
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') {
+        setDetailId(null);
+        setToastName(null);
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
   }, []);
 
   const [detailId, setDetailId] = useState<CoachCharacterId | null>(null);
