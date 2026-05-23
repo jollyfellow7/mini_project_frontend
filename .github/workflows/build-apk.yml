@@ -176,8 +176,6 @@ jobs:
           REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
-            git checkout -- . 2>/dev/null || true
-            git clean -fd 2>/dev/null || true
             git rebase origin/main
             if git push "$REMOTE" HEAD:main; then
               echo "push succeeded on attempt ${attempt}"
