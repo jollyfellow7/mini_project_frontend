@@ -27,21 +27,57 @@ type CoachCharacterPickerProps = {
   childAge?: number | null;
 };
 
-/** Web Speech API 직접 호출 — user gesture 컨텍스트 유지를 위해 setTimeout 없이 실행 */
-function speakDirect(text: string, rate = 0.95) {
-  if (typeof window === 'undefined' || !window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text.trim());
-  u.lang = 'ko-KR';
-  u.rate = rate;
-  const voices = window.speechSynthesis.getVoices();
-  const ko = voices.filter((v) => v.lang.toLowerCase().startsWith('ko'));
-  const voice =
+// ─── 음성 캐시 (모듈 레벨 — 컴포넌트 언마운트 후에도 유지) ───────────────
+let _voiceCache: SpeechSynthesisVoice[] = [];
+let _voiceInitialized = false;
+
+function initVoiceCache() {
+  if (_voiceInitialized || typeof window === 'undefined' || !window.speechSynthesis) return;
+  _voiceInitialized = true;
+  const update = () => {
+    _voiceCache = window.speechSynthesis.getVoices();
+  };
+  update();
+  window.speechSynthesis.addEventListener('voiceschanged', update);
+}
+
+function pickKoVoice(): SpeechSynthesisVoice | undefined {
+  const pool =
+    _voiceCache.length > 0 ? _voiceCache : window.speechSynthesis.getVoices();
+  const ko = pool.filter((v) => v.lang.toLowerCase().startsWith('ko'));
+  return (
     ko.find((v) => v.localService) ??
     ko.find((v) => /yuna|heera|nara|google|microsoft/i.test(v.name)) ??
-    ko[0];
+    ko[0]
+  );
+}
+
+/**
+ * Web Speech API 재생 — user gesture 직접 호출.
+ * Chrome Android의 cancel→speak 경쟁 조건을 피하기 위해
+ * speaking 중일 때만 cancel, 그 외엔 바로 speak.
+ */
+function speakDirect(text: string, rate = 0.95) {
+  if (typeof window === 'undefined' || !window.speechSynthesis) return;
+  const trimmed = text.trim();
+  if (!trimmed) return;
+  const synth = window.speechSynthesis;
+
+  // paused 상태에서는 resume() 먼저
+  if (synth.paused) synth.resume();
+  // 재생 중이면 중단 (비어있을 때 cancel 호출하면 Chrome에서 다음 speak가 씹히는 버그 있음)
+  if (synth.speaking || synth.pending) synth.cancel();
+
+  const u = new SpeechSynthesisUtterance(trimmed);
+  u.lang = 'ko-KR';
+  u.rate = rate;
+  u.volume = 1;
+  u.pitch = 1;
+
+  const voice = pickKoVoice();
   if (voice) u.voice = voice;
-  window.speechSynthesis.speak(u);
+
+  synth.speak(u);
 }
 
 export function CoachCharacterPicker({
@@ -55,7 +91,10 @@ export function CoachCharacterPicker({
 }: CoachCharacterPickerProps) {
   /** createPortal 을 위한 클라이언트 마운트 여부 */
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+    initVoiceCache(); // 음성 목록 비동기 로딩 시작
+  }, []);
 
   const [detailId, setDetailId] = useState<CoachCharacterId | null>(null);
 
