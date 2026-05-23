@@ -16,7 +16,8 @@ type CleaningCalendarProps = {
 };
 
 export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: CleaningCalendarProps) {
-  const now = new Date();
+  // useState 초기화 함수로 안정적인 참조 확보 — 매 렌더마다 new Date() 재생성 방지
+  const [now] = useState(() => new Date());
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
   const [cleanedSet, setCleanedSet] = useState<Set<string>>(new Set());
@@ -31,7 +32,8 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
       setCleanedSet(new Set());
       setMonthPoints(0);
     }
-  }, [viewYear, viewMonth, now, pointsProp]);
+    // now·pointsProp 는 loadCalendar 내부에서 사용하지 않으므로 의존 배열에서 제외
+  }, [viewYear, viewMonth]);
 
   useEffect(() => {
     deferEffect(() => {
