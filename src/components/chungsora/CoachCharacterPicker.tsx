@@ -161,10 +161,7 @@ export function CoachCharacterPicker({
               <p className="mt-2 text-[11px] text-[#adb5bd]">존댓말 전용 안내 친구예요.</p>
             )}
             <p className="mt-3 rounded-lg bg-[#f7f9fa] px-3 py-2 text-xs text-[#6b7280]">
-              {getCoachLine(detail.id, 'slot_enter', {
-                slotIndex: 0,
-                informal: informal && detail.supportsInformal,
-              })}
+              {getCoachLine(detail.id, 'slot_enter', { slotIndex: 0 })}
             </p>
             <div className="mt-4 flex gap-2">
               <button

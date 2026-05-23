@@ -28,6 +28,7 @@ import {
 import { AI_MODEL_ALERT_DEFAULT, isAiModelError } from '@/lib/chungsora/modelAlert';
 import {
   COACH_CHARACTERS,
+  DEFAULT_COACH_ID,
   resolveEffectiveCoachId,
   type CoachCharacterId,
 } from '@/lib/chungsora/coachCharacters';
@@ -90,7 +91,7 @@ export function CaptureCoachBody({ mode, nextHref, onComplete }: CaptureCoachBod
   const [processing, setProcessing] = useState(false);
   const [ghostAligned, setGhostAligned] = useState(false);
   const [ghostMediaFailed, setGhostMediaFailed] = useState(false);
-  const [characterId, setCharacterId] = useState<CoachCharacterId>('jiu');
+  const [characterId, setCharacterId] = useState<CoachCharacterId>(DEFAULT_COACH_ID);
 
   const setScanResult = useCleaningSessionStore((s) => s.setScanResult);
   const setVerifyResult = useCleaningSessionStore((s) => s.setVerifyResult);

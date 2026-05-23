@@ -45,9 +45,6 @@ export default function ChildMePage() {
         useSettingsStore
           .getState()
           .setCoachIds(s.coach_character_id, s.child_coach_character_id ?? null);
-        useSettingsStore
-          .getState()
-          .setCoachInformal(!!s.coach_informal_mode, s.child_coach_informal_mode ?? null);
       })
       .catch(() => undefined);
     void fetchPointsBalance()
@@ -65,9 +62,6 @@ export default function ChildMePage() {
       useSettingsStore
         .getState()
         .setCoachIds(useSettingsStore.getState().coachCharacterId, id);
-      useSettingsStore
-        .getState()
-        .setCoachInformal(useSettingsStore.getState().coachInformalMode, synced);
       if (announce) speak(coachChangeAnnounce(id, synced), { rate: 1.0 });
     } catch {
       /* 로컬만 반영 */

@@ -1,7 +1,11 @@
 'use client';
 
 import { create } from 'zustand';
-import { normalizeCoachCharacterId, type CoachCharacterId } from '@/lib/chungsora/coachCharacters';
+import {
+  DEFAULT_COACH_ID,
+  normalizeCoachCharacterId,
+  type CoachCharacterId,
+} from '@/lib/chungsora/coachCharacters';
 
 /** 세션 중 캐시 — 값은 API(Neon)에서만 채움 */
 type SettingsState = {
@@ -26,7 +30,7 @@ export const useSettingsStore = create<SettingsState>()((set) => ({
   lockTime: '',
   lockDays: '',
   allowPhone: true,
-  coachCharacterId: 'jiu',
+  coachCharacterId: DEFAULT_COACH_ID,
   childCoachCharacterId: null,
   setBaseCleanWon: (won) => set({ baseCleanWon: won }),
   setPassScore: (score) => set({ passScore: score }),

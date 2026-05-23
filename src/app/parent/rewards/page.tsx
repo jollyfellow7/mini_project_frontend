@@ -20,6 +20,7 @@ import {
   type ShopReward,
 } from '@/lib/chungsora/clientApi';
 import {
+  DEFAULT_COACH_ID,
   normalizeCoachCharacterId,
   type CoachCharacterId,
 } from '@/lib/chungsora/coachCharacters';
@@ -42,7 +43,7 @@ function RewardsPageInner() {
   const [newWon, setNewWon] = useState(1000);
   const [questTitle, setQuestTitle] = useState('');
   const [showQuestForm, setShowQuestForm] = useState(searchParams.get('addQuest') === '1');
-  const [coachId, setCoachId] = useState<CoachCharacterId>('jiu');
+  const [coachId, setCoachId] = useState<CoachCharacterId>(DEFAULT_COACH_ID);
 
   const load = useCallback(async () => {
     try {
