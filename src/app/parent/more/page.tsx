@@ -39,7 +39,7 @@ export default function ParentMorePage() {
         { label: '청소 스케줄',          href: '/parent/more/schedule', trailing: `${lockDays} ${lockTime}` },
         { label: '잠금 해제 기준',        href: '/parent/more/lock',     trailing: `${passScore}점` },
         { label: '잠금 중 허용',          href: '/parent/more/lock',     trailing: allowPhone ? '전화 ON' : '전화 OFF' },
-        { label: '자녀 관리 · 연결 코드', href: '/parent/pair' },
+        { label: '자녀 관리 · 연결 코드', href: '/parent/more/pair' },
         { label: '새 휴대폰 연결 (폰 교체)', href: '/parent/pair/relink' },
         { label: '커스텀 칭찬 관리',      href: '/parent/more/praise' },
       ],

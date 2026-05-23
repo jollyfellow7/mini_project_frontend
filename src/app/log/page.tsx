@@ -4,13 +4,17 @@ import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { RoleShell } from '@/components/chungsora/RoleShell';
 import { CleaningLogView } from '@/components/chungsora/CleaningLogView';
+import { CleaningCalendar } from '@/components/chungsora/CleaningCalendar';
 import { useChungsoraRole } from '@/lib/chungsora/useChungsoraRole';
 
 function LogViewBody({ dateParam }: { dateParam: string | null }) {
   const role = useChungsoraRole();
   if (role === null) return null;
   return (
-    <CleaningLogView role={role} showBack={role === 'child'} dateParam={dateParam} />
+    <div className="flex flex-col gap-4 px-4 pt-4">
+      {role === 'parent' && <CleaningCalendar role={role} />}
+      <CleaningLogView role={role} showBack={role === 'child'} dateParam={dateParam} />
+    </div>
   );
 }
 
