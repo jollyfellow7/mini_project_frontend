@@ -44,6 +44,7 @@ function RewardsPageInner() {
   const [questTitle, setQuestTitle] = useState('');
   const [showQuestForm, setShowQuestForm] = useState(searchParams.get('addQuest') === '1');
   const [coachId, setCoachId] = useState<CoachCharacterId>(DEFAULT_COACH_ID);
+  const [informal, setInformal] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -55,6 +56,7 @@ function RewardsPageInner() {
       setRewards(shop.rewards);
       setQuests(q.quests);
       setCoachId(normalizeCoachCharacterId(family.coach_character_id));
+      setInformal(family.coach_informal_mode ?? false);
       if (family.base_clean_won) setBaseCleanWon(family.base_clean_won);
     } catch {
       setRewards([]);
@@ -226,6 +228,11 @@ function RewardsPageInner() {
             onChange={(id) => {
               setCoachId(id);
               void updateFamilyProfile({ coach_character_id: id }).catch(() => undefined);
+            }}
+            informal={informal}
+            onInformalChange={(v) => {
+              setInformal(v);
+              void updateFamilyProfile({ informal_mode: v }).catch(() => undefined);
             }}
           />
         </div>
