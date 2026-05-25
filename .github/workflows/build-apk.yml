@@ -75,6 +75,38 @@ jobs:
       - working-directory: mini_flutter
         run: flutter create . --platforms=android --org com.chungsora --project-name chungsora_child
 
+      - name: Inject Keystore signing (v1)
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > mini_flutter/android/chungsora-release.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../chungsora-release.jks\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEYSTORE_ALIAS" \
+            > mini_flutter/android/key.properties
+          python3 - << 'PYEOF'
+          import sys
+          path = 'mini_flutter/android/app/build.gradle.kts'
+          with open(path, 'r') as f:
+              c = f.read()
+          imports = 'import java.util.Properties\nimport java.io.FileInputStream\n\n'
+          if 'import java.util.Properties' not in c:
+              c = imports + c
+          key_loading = '\nval keyPropertiesFile = rootProject.file("key.properties")\nval keyProperties = Properties()\nif (keyPropertiesFile.exists()) {\n    keyProperties.load(FileInputStream(keyPropertiesFile))\n}\n'
+          if 'keyPropertiesFile' not in c:
+              c = c.replace('\nandroid {', key_loading + '\nandroid {', 1)
+          signing_block = '    signingConfigs {\n        if (keyPropertiesFile.exists()) {\n            create("release") {\n                keyAlias = keyProperties["keyAlias"] as String\n                keyPassword = keyProperties["keyPassword"] as String\n                storeFile = file(keyProperties["storeFile"] as String)\n                storePassword = keyProperties["storePassword"] as String\n            }\n        }\n    }\n'
+          if 'signingConfigs' not in c:
+              c = c.replace('    defaultConfig {', signing_block + '    defaultConfig {', 1)
+          c = c.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = if (keyPropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")')
+          with open(path, 'w') as f:
+              f.write(c)
+          print("v1 signing config patched")
+          PYEOF
+
       - working-directory: mini_flutter
         run: flutter pub get
 
@@ -275,6 +307,38 @@ jobs:
 
           chmod +x "$DST/gradlew"
           flutter --version
+
+      - name: Inject Keystore signing (v2)
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > mini_flutter_v2/android/chungsora-release.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../chungsora-release.jks\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEYSTORE_ALIAS" \
+            > mini_flutter_v2/android/key.properties
+          python3 - << 'PYEOF'
+          import sys
+          path = 'mini_flutter_v2/android/app/build.gradle.kts'
+          with open(path, 'r') as f:
+              c = f.read()
+          imports = 'import java.util.Properties\nimport java.io.FileInputStream\n\n'
+          if 'import java.util.Properties' not in c:
+              c = imports + c
+          key_loading = '\nval keyPropertiesFile = rootProject.file("key.properties")\nval keyProperties = Properties()\nif (keyPropertiesFile.exists()) {\n    keyProperties.load(FileInputStream(keyPropertiesFile))\n}\n'
+          if 'keyPropertiesFile' not in c:
+              c = c.replace('\nandroid {', key_loading + '\nandroid {', 1)
+          signing_block = '    signingConfigs {\n        if (keyPropertiesFile.exists()) {\n            create("release") {\n                keyAlias = keyProperties["keyAlias"] as String\n                keyPassword = keyProperties["keyPassword"] as String\n                storeFile = file(keyProperties["storeFile"] as String)\n                storePassword = keyProperties["storePassword"] as String\n            }\n        }\n    }\n'
+          if 'signingConfigs' not in c:
+              c = c.replace('    defaultConfig {', signing_block + '    defaultConfig {', 1)
+          c = c.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = if (keyPropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")')
+          with open(path, 'w') as f:
+              f.write(c)
+          print("v2 signing config patched")
+          PYEOF
 
       - working-directory: mini_flutter_v2
         run: flutter pub get

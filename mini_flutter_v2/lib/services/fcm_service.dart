@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  debugPrint('[FCM BG] type=\${message.data["type"]}');
+  debugPrint('[FCM BG] type=${message.data["type"]}');
 }
 
 class FcmService {
@@ -12,7 +12,7 @@ class FcmService {
   static Future<void> init({required void Function(String type) onMessage}) async {
     await _messaging.requestPermission(alert: true, badge: true, sound: true);
     final token = await _messaging.getToken();
-    debugPrint('[FCM] token=\$token');
+    debugPrint('[FCM] token=$token');
 
     FirebaseMessaging.onMessage.listen((msg) {
       final type = msg.data['type'] as String?;
