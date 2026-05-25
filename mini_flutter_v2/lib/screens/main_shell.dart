@@ -21,7 +21,10 @@ class _MainShellState extends State<MainShell> {
   void initState() {
     super.initState();
     final lock = widget.lockService;
-    _controller = WebViewController()
+    _controller = WebViewController(
+      // 청소 촬영용 카메라·마이크 권한 요청 자동 허용 (Android WebView)
+      onPermissionRequest: (request) => request.grant(),
+    )
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFFF7F9FA))
       ..addJavaScriptChannel(

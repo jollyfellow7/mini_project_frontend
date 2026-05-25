@@ -15,7 +15,9 @@ class _WebViewScreenState extends State<WebViewScreen> {
   @override
   void initState() {
     super.initState();
-    _controller = WebViewController()
+    _controller = WebViewController(
+      onPermissionRequest: (request) => request.grant(),
+    )
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFFF7F9FA))
       ..setNavigationDelegate(NavigationDelegate(
