@@ -21,7 +21,13 @@ class _WebViewScreenState extends State<WebViewScreen> {
       ..setNavigationDelegate(NavigationDelegate(
         onPageStarted: (_) {},
         onPageFinished: (_) {},
+        onWebResourceError: (_) {},
       ))
+      ..setOnPlatformPermissionRequest(
+        (PlatformWebViewPermissionRequest request) {
+          request.grant();
+        },
+      )
       ..loadRequest(Uri.parse(ApiConfig.childPwaUrl));
   }
 
