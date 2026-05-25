@@ -2,32 +2,32 @@
 === Gradle/Kotlin errors ===
 
 === Last 80 lines ===
-[        ] }`
-[        ] INFO: /home/runner/.gradle/caches/9.1.0/transforms/90eadcd2212631510fdf5f3c3dbf5ed2/transformed/coordinatorlayout-1.0.0/proguard.txt:16:1-19:2: R8: Proguard configuration rule does not match anything: `-keep public class * extends androidx.coordinatorlayout.widget.CoordinatorLayout$Behavior {
-[        ]   public <init>(android.content.Context,android.util.AttributeSet);
-[        ]   public <init>();
-[        ] }`
-[        ] INFO: /home/runner/.gradle/caches/9.1.0/transforms/77b1eb9877771cf58008ad1d56e5798c/transformed/shrink-rules/lib/META-INF/proguard/androidx-annotations.pro:4:1-6:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
-[        ]   @androidx.annotation.Keep <methods>;
-[        ] }`
-[        ] INFO: /home/runner/.gradle/caches/9.1.0/transforms/77b1eb9877771cf58008ad1d56e5798c/transformed/shrink-rules/lib/META-INF/proguard/androidx-annotations.pro:8:1-10:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
-[        ]   @androidx.annotation.Keep <fields>;
-[        ] }`
-[        ] INFO: /home/runner/.gradle/caches/9.1.0/transforms/77b1eb9877771cf58008ad1d56e5798c/transformed/shrink-rules/lib/META-INF/proguard/androidx-annotations.pro:12:1-14:2: R8: Proguard configuration rule does not match anything: `-keepclasseswithmembers class * {
-[   +4 ms]   @androidx.annotation.Keep <init>(...);
-[        ] }`
-[+25892 ms] Resolve mutations for :app:compileReleaseArtProfile (Thread[Execution worker,5,main]) started.
-[        ] :app:compileReleaseArtProfile (Thread[Execution worker,5,main]) started.
-[        ] Resolve mutations for :app:convertShrunkResourcesToBinaryRelease (Thread[included builds,5,main]) started.
-[        ] :app:convertShrunkResourcesToBinaryRelease (Thread[included builds,5,main]) started.
-[  +99 ms] > Task :app:convertShrunkResourcesToBinaryRelease
-[   +1 ms] Custom actions are attached to task ':app:convertShrunkResourcesToBinaryRelease'.
+[        ] Caching disabled for task ':app:lintVitalReportRelease' because:
+[        ]   Build cache is disabled
+[        ]   Caching has been disabled for the task
+[        ] Task ':app:lintVitalReportRelease' is not up-to-date because:
+[        ]   No history is available.
+[        ] Android Lint: Reusing lint classloader 32.0.1_true
+[        ] Resolve mutations for :app:lintVitalRelease (Thread[Execution worker Thread 2,5,main]) started.
+[        ] :app:lintVitalRelease (Thread[Execution worker Thread 2,5,main]) started.
+[        ] > Task :app:lintVitalRelease
+[        ] Caching disabled for task ':app:lintVitalRelease' because:
+[        ]   Build cache is disabled
+[        ]   Caching has been disabled for the task
+[        ] Task ':app:lintVitalRelease' is not up-to-date because:
+[        ]   Task.upToDateWhen is false.
+[+20901 ms] Resolve mutations for :app:compileReleaseArtProfile (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:compileReleaseArtProfile (Thread[Execution worker Thread 2,5,main]) started.
+[        ] Resolve mutations for :app:convertShrunkResourcesToBinaryRelease (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:convertShrunkResourcesToBinaryRelease (Thread[Execution worker Thread 3,5,main]) started.
+[  +96 ms] > Task :app:convertShrunkResourcesToBinaryRelease
+[        ] Custom actions are attached to task ':app:convertShrunkResourcesToBinaryRelease'.
 [        ] Caching disabled for task ':app:convertShrunkResourcesToBinaryRelease' because:
 [        ]   Build cache is disabled
 [        ] Task ':app:convertShrunkResourcesToBinaryRelease' is not up-to-date because:
 [        ]   No history is available.
-[        ] Resolve mutations for :app:optimizeReleaseResources (Thread[included builds,5,main]) started.
-[        ] :app:optimizeReleaseResources (Thread[included builds,5,main]) started.
+[        ] Resolve mutations for :app:optimizeReleaseResources (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:optimizeReleaseResources (Thread[Execution worker Thread 3,5,main]) started.
 [        ] > Task :app:compileReleaseArtProfile
 [        ] Caching disabled for task ':app:compileReleaseArtProfile' because:
 [        ]   Build cache is disabled
@@ -39,9 +39,9 @@
 [        ]   Build cache is disabled
 [        ] Task ':app:optimizeReleaseResources' is not up-to-date because:
 [        ]   No history is available.
-[        ] Resolve mutations for :app:packageRelease (Thread[included builds,5,main]) started.
-[        ] :app:packageRelease (Thread[included builds,5,main]) started.
-[ +397 ms] > Task :app:packageRelease
+[        ] Resolve mutations for :app:packageRelease (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:packageRelease (Thread[Execution worker Thread 2,5,main]) started.
+[ +398 ms] > Task :app:packageRelease
 [        ] Custom actions are attached to task ':app:packageRelease'.
 [        ] Caching disabled for task ':app:packageRelease' because:
 [        ]   Build cache is disabled
@@ -49,16 +49,16 @@
 [        ] Task ':app:packageRelease' is not up-to-date because:
 [        ]   No history is available.
 [        ] The input changes require a full rebuild for incremental task ':app:packageRelease'.
-[        ] Resolve mutations for :app:createReleaseApkListingFileRedirect (Thread[included builds,5,main]) started.
-[        ] :app:createReleaseApkListingFileRedirect (Thread[included builds,5,main]) started.
+[        ] Resolve mutations for :app:createReleaseApkListingFileRedirect (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:createReleaseApkListingFileRedirect (Thread[Execution worker Thread 3,5,main]) started.
 [        ] > Task :app:createReleaseApkListingFileRedirect
 [        ] Caching disabled for task ':app:createReleaseApkListingFileRedirect' because:
 [        ]   Build cache is disabled
 [        ]   Caching has been disabled for the task
 [        ] Task ':app:createReleaseApkListingFileRedirect' is not up-to-date because:
 [        ]   No history is available.
-[        ] Resolve mutations for :app:assembleRelease (Thread[included builds,5,main]) started.
-[        ] :app:assembleRelease (Thread[included builds,5,main]) started.
+[        ] Resolve mutations for :app:assembleRelease (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:assembleRelease (Thread[Execution worker Thread 3,5,main]) started.
 [  +98 ms] > Task :app:assembleRelease
 [        ] Caching disabled for task ':app:assembleRelease' because:
 [        ]   Build cache is disabled
@@ -67,18 +67,18 @@
 [        ] AAPT2 aapt2-9.0.1-14304508-linux Daemon #0: shutdown
 [        ] AAPT2 aapt2-9.0.1-14304508-linux Daemon #1: shutdown
 [        ] Android Lint: Disposing Uast application environment in lint classloader [32.0.1_true]
-[        ] Build ddb8e214-5eb0-4b55-aeb5-cb997f0beb3a is closed
+[        ] Build 5dce0303-c60f-42fb-9da5-4e421b7f1c75 is closed
 [        ] [Incubating] Problems report is available at: file:///home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter/build/reports/problems/problems-report.html
 [        ] Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 [        ] You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
 [        ] For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
-[        ] BUILD SUCCESSFUL in 3m 50s
+[        ] BUILD SUCCESSFUL in 4m 18s
 [        ] 186 actionable tasks: 181 executed, 5 up-to-date
-[        ] Gradle was unable to watch the file system for changes. Unable to watch same file twice via different paths: Already watching path: /home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter/android.
-[ +363 ms] Running Gradle task 'assembleRelease'... (completed in 231.1s)
+[  +43 ms] Gradle was unable to watch the file system for changes. Unable to watch same file twice via different paths: Already watching path: /home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter/android.
+[ +329 ms] Running Gradle task 'assembleRelease'... (completed in 259.3s)
 [   +1 ms] Calculate SHA1: LocalDirectory: '/home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter/build/app/outputs/flutter-apk'/app-release.apk
-[ +754 ms] ✓ Built build/app/outputs/flutter-apk/app-release.apk (50.6MB)
-[   +7 ms] "flutter apk" took 232,175ms.
-[  +11 ms] Running 1 shutdown hook
+[ +756 ms] ✓ Built build/app/outputs/flutter-apk/app-release.apk (50.6MB)
+[   +6 ms] "flutter apk" took 260,461ms.
+[  +10 ms] Running 1 shutdown hook
 [        ] Shutdown hooks complete
-[        ] exiting with code 0
+[   +1 ms] exiting with code 0
