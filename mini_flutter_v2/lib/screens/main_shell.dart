@@ -31,6 +31,9 @@ class _MainShellState extends State<MainShell> {
         'ChungsoraNative',
         onMessageReceived: (msg) {
           switch (msg.message) {
+            case 'lock':
+              lock.showUiLock();
+              break;
             case 'unlock':
               lock.unlock();
               break;

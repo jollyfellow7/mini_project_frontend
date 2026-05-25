@@ -26,6 +26,10 @@ class LockService extends ChangeNotifier {
   LockPolicy? _policy;
   LockStatus? _status;
   bool _uiLocked = false;
+  // Device Owner 가 아닐 때(시연/수동 잠금) UI 오버레이를 유지하기 위한 의도 플래그.
+  // _refreshStatus() 가 native 상태로 _uiLocked 를 덮어써도 이 값으로 잠금을 지킨다.
+  // 인메모리라 앱 재시작 시 해제됨(데모용으로 적절). unlock() 에서 해제.
+  bool _pendingUiLock = false;
   bool _polling = false;
   String? _lastError;
   Timer? _timer;
@@ -74,7 +78,7 @@ class LockService extends ChangeNotifier {
   Future<void> _refreshStatus() async {
     try {
       _status = await LockBridge.getStatus();
-      _uiLocked = _status!.locked || _status!.lockTaskActive;
+      _uiLocked = _status!.locked || _status!.lockTaskActive || _pendingUiLock;
     } catch (e) {
       _lastError = e.toString();
     }
@@ -114,8 +118,11 @@ class LockService extends ChangeNotifier {
       await _syncNativePolicy();
 
       final unlockedToday = await _isUnlockedToday();
-      final shouldLock = pendingAuto ||
-          _scheduler.shouldLockNow(_policy!, unlockedToday: unlockedToday);
+      // 오늘 이미 통과/언락했으면 native 가 큐에 쌓아둔 pendingAuto 가 남아있어도
+      // 재잠금하지 않는다. (통과 직후 다시 잠겨 청소를 또 요구하는 문제 방지)
+      final shouldLock = !unlockedToday &&
+          (pendingAuto ||
+              _scheduler.shouldLockNow(_policy!, unlockedToday: unlockedToday));
 
       if (shouldLock && !(_status?.lockTaskActive ?? false)) {
         await _applyNativeLock();
@@ -152,6 +159,7 @@ class LockService extends ChangeNotifier {
   }
 
   Future<void> unlock() async {
+    _pendingUiLock = false;
     await LockBridge.stopLock();
     final prefs = await SharedPreferences.getInstance();
     final today = LockScheduler.todayKey();
@@ -172,6 +180,7 @@ class LockService extends ChangeNotifier {
   }
 
   Future<void> forceLock() async {
+    _pendingUiLock = true;
     _policy ??= LockPolicy(
       lockTime: '00:00',
       lockDays: '월·화·수·목·금·토·일',

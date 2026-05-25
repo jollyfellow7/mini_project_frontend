@@ -27,6 +27,7 @@ class LockService extends ChangeNotifier {
   LockStatus? _status;
   bool _uiLocked = false;
   bool _missionUiActive = false;
+  bool _pendingUiLock = false;
   bool _polling = false;
   String? _lastError;
   Timer? _timer;
@@ -79,7 +80,7 @@ class LockService extends ChangeNotifier {
       _status = await LockBridge.getStatus();
       final task = _status!.lockTaskActive;
       if (!_missionUiActive) {
-        _uiLocked = task || _status!.locked;
+        _uiLocked = task || _status!.locked || _pendingUiLock;
       }
     } catch (e) {
       _lastError = e.toString();
@@ -178,6 +179,7 @@ class LockService extends ChangeNotifier {
 
   Future<void> unlock() async {
     _missionUiActive = false;
+    _pendingUiLock = false;
     await LockBridge.stopLock();
     final prefs = await SharedPreferences.getInstance();
     final today = LockScheduler.todayKey();
@@ -198,8 +200,18 @@ class LockService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// 시연용 — Device Owner 없이 Flutter 잠금 UI 표시 (PWA 'lock' 메시지로 호출)
+  Future<void> showUiLock() async {
+    _missionUiActive = false;
+    _pendingUiLock = true;
+    _uiLocked = true;
+    _lastError = null;
+    notifyListeners();
+  }
+
   Future<void> forceLock() async {
     _missionUiActive = false;
+    _pendingUiLock = true;
     _policy ??= LockPolicy(
       lockTime: '00:00',
       lockDays: '월·화·수·목·금·토·일',
