@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services")
 }
 
 android {
@@ -19,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.chungsora.child"
+        applicationId = "com.chungsora.child_v2"
         minSdk = 24
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

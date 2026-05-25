@@ -58,7 +58,7 @@ export default function MorePraisePage() {
     <div className="px-5 py-6">
       <Link href="/parent/more" className="text-xs font-semibold text-[#00b8cf]">← 더보기</Link>
       <h1 className="mt-3 text-xl font-bold text-[#2f3438]">커스텀 칭찬</h1>
-      <p className="mt-1 text-sm text-[#828c94]">Neon praise_presets · API 동기화</p>
+      <p className="mt-1 text-sm text-[#828c94]">AI 코치가 칭찬할 때 활용하는 문구를 관리해요</p>
 
       {error && <p className="mt-3 text-sm text-[#e03131]">{error}</p>}
       {loading && <p className="mt-4 text-sm text-[#828c94]">불러오는 중…</p>}

@@ -1,0 +1,9 @@
+{
+  "version": "2.0.0",
+  "build_number": "1",
+  "built_at": null,
+  "commit": null,
+  "package": "app.chungsora.parent.pwa",
+  "apk_size_bytes": null,
+  "note": "PWA 기반 부모 앱 v2 - 빌드 대기 중"
+}

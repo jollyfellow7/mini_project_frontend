@@ -177,7 +177,7 @@ class LockService extends ChangeNotifier {
       lockDays: '월·화·수·목·금·토·일',
       passScore: 70,
       allowPhone: true,
-      allowlist: const ['dialer', 'com.chungsora.child'],
+      allowlist: const ['dialer', 'com.chungsora.child_v2'],
     );
     try {
       await _applyNativeLock();
@@ -201,7 +201,7 @@ class LockService extends ChangeNotifier {
       lockDays: '월·수·금',
       passScore: 70,
       allowPhone: true,
-      allowlist: const ['dialer', 'com.chungsora.child'],
+      allowlist: const ['dialer', 'com.chungsora.child_v2'],
     )).resolveAllowlist();
     try {
       await LockBridge.startLock(list);

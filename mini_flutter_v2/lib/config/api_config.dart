@@ -16,5 +16,5 @@ class ApiConfig {
 String resolveUploadUrl(String? path) {
   if (path == null || path.isEmpty) return '';
   if (path.startsWith('http')) return path;
-  return '\${ApiConfig.baseUrl}\$path';
+  return '${ApiConfig.baseUrl}$path';
 }

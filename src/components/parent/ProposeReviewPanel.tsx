@@ -77,7 +77,7 @@ export function ProposeReviewPanel() {
         {!pending ? (
           <div className="ch-card px-4 py-8 text-center">
             <p className="text-sm font-medium text-[#828c94]">대기 중인 제안이 없어요</p>
-            <p className="mt-1 text-xs text-[#adb5bd]">💬 에서 지난 대화를 볼 수 있어요</p>
+            <p className="mt-1 text-xs text-[#adb5bd]">우측 상단 💬 버튼에서 지난 대화를 볼 수 있어요</p>
           </div>
         ) : (
           <div className="ch-card p-4">

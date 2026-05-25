@@ -19,16 +19,16 @@ type CoachCharacterPickerProps = {
   informal?: boolean;
   onInformalChange?: (v: boolean) => void;
   /**
-   * true 이면 "미션 진행 중" 상태 — 카드 클릭·소개 팝업은 허용하되
-   * 확정 시 큐에 저장, 미션 종료 후(false로 바뀔 때) 자동으로 onChange 실행
+   * true 이면 "미션 진행 중" 상태 — 카드 클릭소개 팝업은 허용하되
+   * 확정 시 큐에 저장, 미션 종료 후(false로 바뀌는 시점) 자동으로 onChange 실행
    */
   disabled?: boolean;
   title?: string;
-  /** 자녀 나이 — 추천 배지 표시용 (선택) */
+  /** 자녀 나이 — 추청 배지 표시용 (선택) */
   childAge?: number | null;
 };
 
-// ─── 음성 캐시 (모듈 레벨 — 컴포넌트 언마운트 후에도 유지) ───────────────
+// ─── 음성 캐시 (모듈 레벨 — 컴포넌트 언마운트 후에도 유지) ───────────────────────
 let _voiceCache: SpeechSynthesisVoice[] = [];
 let _voiceInitialized = false;
 
@@ -55,20 +55,13 @@ function pickKoVoice(): SpeechSynthesisVoice | undefined {
   );
 }
 
-/**
- * Web Speech API 재생 — user gesture 직접 호출.
- * Chrome Android의 cancel→speak 경쟁 조건을 피하기 위해
- * speaking 중일 때만 cancel, 그 외엔 바로 speak.
- */
 function speakDirect(text: string, rate = 0.95) {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
   const trimmed = text.trim();
   if (!trimmed) return;
   const synth = window.speechSynthesis;
 
-  // paused 상태에서는 resume() 먼저
   if (synth.paused) synth.resume();
-  // 재생 중이면 중단 (비어있을 때 cancel 호출하면 Chrome에서 다음 speak가 씹히는 버그 있음)
   if (synth.speaking || synth.pending) synth.cancel();
 
   const u = new SpeechSynthesisUtterance(trimmed);
@@ -92,12 +85,10 @@ export function CoachCharacterPicker({
   title = '아이에게 들려줄 안내 친구',
   childAge = null,
 }: CoachCharacterPickerProps) {
-  /** createPortal 을 위한 클라이언트 마운트 여부 */
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
     setMounted(true);
     initVoiceCache();
-    // 탭 전환·앱 전환 시 열린 포털 자동 닫기 (stuck overlay 방지)
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
         setDetailId(null);
@@ -109,11 +100,8 @@ export function CoachCharacterPicker({
   }, []);
 
   const [detailId, setDetailId] = useState<CoachCharacterId | null>(null);
-
-  /** 미션 진행 중 선택된 대기 코치 ID */
   const [queuedId, setQueuedId] = useState<CoachCharacterId | null>(null);
 
-  /** 미션 종료(disabled: true→false) 시 큐된 변경 자동 적용 */
   const prevDisabled = useRef(disabled);
   useEffect(() => {
     if (prevDisabled.current && !disabled && queuedId !== null) {
@@ -123,7 +111,6 @@ export function CoachCharacterPicker({
     prevDisabled.current = disabled;
   }, [disabled, queuedId, onChange]);
 
-  /** 설정 완료 토스트 */
   const [toastName, setToastName] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -147,7 +134,6 @@ export function CoachCharacterPicker({
   const handleConfirm = (id: CoachCharacterId) => {
     setDetailId(null);
     if (disabled) {
-      // 미션 진행 중 → 큐에 저장, 즉시 적용 안 함
       setQueuedId(id);
       showToast(COACH_CHARACTERS[id].name, true);
     } else {
@@ -157,7 +143,6 @@ export function CoachCharacterPicker({
     }
   };
 
-  /** 현재 활성/대기 ID */
   const pendingId = disabled ? queuedId : null;
 
   return (
@@ -170,7 +155,6 @@ export function CoachCharacterPicker({
         </p>
       )}
 
-      {/* 페르소나 카드 — disabled 상태에서도 클릭 허용(팝업 열기) */}
       <div className="grid grid-cols-3 gap-2">
         {COACH_CHARACTER_IDS.map((id) => {
           const c = COACH_CHARACTERS[id];
@@ -213,7 +197,6 @@ export function CoachCharacterPicker({
         })}
       </div>
 
-      {/* 반말 모드 토글 */}
       {onInformalChange && (
         <div
           className={`flex items-center justify-between rounded-xl border border-[#eef0f2] px-3 py-2.5 ${informalSupported ? '' : 'opacity-50'}`}
@@ -246,7 +229,6 @@ export function CoachCharacterPicker({
         </div>
       )}
 
-      {/* 미리 들어보기 — user gesture 컨텍스트 직접 호출 */}
       <button
         type="button"
         onClick={() => {
@@ -258,7 +240,6 @@ export function CoachCharacterPicker({
         ▶ 미리 들어보기
       </button>
 
-      {/* ── 소개 팝업 — createPortal로 document.body에 직접 렌더 ── */}
       {mounted &&
         detail &&
         createPortal(
@@ -302,7 +283,6 @@ export function CoachCharacterPicker({
                 {getCoachLine(detail.id, 'slot_enter', { slotIndex: 0 })}
               </p>
 
-              {/* 미리 들어보기 (팝업 내) */}
               <button
                 type="button"
                 onClick={() => speakDirect(coachIntroSample(detail.id, informal), detail.ttsRate)}
@@ -338,7 +318,6 @@ export function CoachCharacterPicker({
           document.body,
         )}
 
-      {/* ── 설정 완료 토스트 — createPortal로 document.body에 직접 렌더 ── */}
       {mounted &&
         toastName &&
         createPortal(

@@ -8,7 +8,7 @@ import { toLogDateParam } from '@/lib/chungsora/logV2';
 import { setRole, type ChungsoraRole } from '@/lib/chungsora/role';
 import { deferEffect } from '@/lib/react/deferEffect';
 
-const DAYS = ['일', '월', '화', '수', '목', '금', '토'] as const;
+const DAYS = ['\uc77c', '\uc6d4', '\ud654', '\uc218', '\ubaa9', '\uae08', '\ud1a0'] as const;
 
 type CleaningCalendarProps = {
   points?: number;
@@ -73,18 +73,18 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
             type="button"
             onClick={() => shiftMonth(-1)}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[#828c94] hover:bg-[#f0f2f4]"
-            aria-label="이전 달"
+            aria-label="\uc774\uc804 \ub2ec"
           >
             <ChevronLeft size={18} />
           </button>
           <span className="min-w-[96px] text-center text-sm font-bold text-[#2f3438]">
-            {viewYear}년 {viewMonth}월
+            {viewYear}\ub144 {viewMonth}\uc6d4
           </span>
           <button
             type="button"
             onClick={() => shiftMonth(1)}
             className="flex h-8 w-8 items-center justify-center rounded-lg text-[#828c94] hover:bg-[#f0f2f4]"
-            aria-label="다음 달"
+            aria-label="\ub2e4\uc74c \ub2ec"
           >
             <ChevronRight size={18} />
           </button>
@@ -122,7 +122,7 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
               className={`flex aspect-square flex-col items-center justify-center rounded-lg text-xs transition-colors ${cellClass}`}
             >
               <span>{day}</span>
-              {cleaned && !isToday && <span className="text-[9px] leading-none">✓</span>}
+              {cleaned && !isToday && <span className="text-[9px] leading-none">\u2713</span>}
             </Link>
           );
         })}
