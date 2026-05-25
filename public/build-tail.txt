@@ -16,19 +16,19 @@
 [        ]   Caching has been disabled for the task
 [        ] Task ':app:lintVitalRelease' is not up-to-date because:
 [        ]   Task.upToDateWhen is false.
-[+18299 ms] Resolve mutations for :app:compileReleaseArtProfile (Thread[included builds,5,main]) started.
+[+26600 ms] Resolve mutations for :app:compileReleaseArtProfile (Thread[included builds,5,main]) started.
 [        ] :app:compileReleaseArtProfile (Thread[included builds,5,main]) started.
-[        ] Resolve mutations for :app:convertShrunkResourcesToBinaryRelease (Thread[Execution worker Thread 2,5,main]) started.
-[        ] :app:convertShrunkResourcesToBinaryRelease (Thread[Execution worker Thread 2,5,main]) started.
-[  +99 ms] > Task :app:convertShrunkResourcesToBinaryRelease
+[        ] Resolve mutations for :app:convertShrunkResourcesToBinaryRelease (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:convertShrunkResourcesToBinaryRelease (Thread[Execution worker,5,main]) started.
+[        ] > Task :app:convertShrunkResourcesToBinaryRelease
 [        ] Custom actions are attached to task ':app:convertShrunkResourcesToBinaryRelease'.
 [        ] Caching disabled for task ':app:convertShrunkResourcesToBinaryRelease' because:
 [        ]   Build cache is disabled
 [        ] Task ':app:convertShrunkResourcesToBinaryRelease' is not up-to-date because:
 [        ]   No history is available.
-[        ] Resolve mutations for :app:optimizeReleaseResources (Thread[Execution worker Thread 3,5,main]) started.
+[        ] Resolve mutations for :app:optimizeReleaseResources (Thread[Execution worker,5,main]) started.
 [        ] :app:optimizeReleaseResources (Thread[Execution worker,5,main]) started.
-[        ] > Task :app:compileReleaseArtProfile
+[  +97 ms] > Task :app:compileReleaseArtProfile
 [        ] Caching disabled for task ':app:compileReleaseArtProfile' because:
 [        ]   Build cache is disabled
 [        ] Task ':app:compileReleaseArtProfile' is not up-to-date because:
@@ -39,9 +39,9 @@
 [        ]   Build cache is disabled
 [        ] Task ':app:optimizeReleaseResources' is not up-to-date because:
 [        ]   No history is available.
-[        ] Resolve mutations for :app:packageRelease (Thread[Execution worker,5,main]) started.
-[        ] :app:packageRelease (Thread[Execution worker,5,main]) started.
-[ +298 ms] > Task :app:packageRelease
+[        ] Resolve mutations for :app:packageRelease (Thread[included builds,5,main]) started.
+[        ] :app:packageRelease (Thread[included builds,5,main]) started.
+[ +399 ms] > Task :app:packageRelease
 [        ] Custom actions are attached to task ':app:packageRelease'.
 [        ] Caching disabled for task ':app:packageRelease' because:
 [        ]   Build cache is disabled
@@ -49,17 +49,17 @@
 [        ] Task ':app:packageRelease' is not up-to-date because:
 [        ]   No history is available.
 [        ] The input changes require a full rebuild for incremental task ':app:packageRelease'.
-[        ] Resolve mutations for :app:createReleaseApkListingFileRedirect (Thread[Execution worker,5,main]) started.
-[        ] :app:createReleaseApkListingFileRedirect (Thread[Execution worker,5,main]) started.
+[        ] Resolve mutations for :app:createReleaseApkListingFileRedirect (Thread[included builds,5,main]) started.
+[        ] :app:createReleaseApkListingFileRedirect (Thread[included builds,5,main]) started.
 [        ] > Task :app:createReleaseApkListingFileRedirect
 [        ] Caching disabled for task ':app:createReleaseApkListingFileRedirect' because:
 [        ]   Build cache is disabled
 [        ]   Caching has been disabled for the task
 [        ] Task ':app:createReleaseApkListingFileRedirect' is not up-to-date because:
 [        ]   No history is available.
-[        ] Resolve mutations for :app:assembleRelease (Thread[Execution worker,5,main]) started.
-[        ] :app:assembleRelease (Thread[Execution worker,5,main]) started.
-[  +98 ms] > Task :app:assembleRelease
+[        ] Resolve mutations for :app:assembleRelease (Thread[included builds,5,main]) started.
+[        ] :app:assembleRelease (Thread[included builds,5,main]) started.
+[  +99 ms] > Task :app:assembleRelease
 [        ] Caching disabled for task ':app:assembleRelease' because:
 [        ]   Build cache is disabled
 [        ] Task ':app:assembleRelease' is not up-to-date because:
@@ -67,18 +67,18 @@
 [        ] AAPT2 aapt2-9.0.1-14304508-linux Daemon #0: shutdown
 [        ] AAPT2 aapt2-9.0.1-14304508-linux Daemon #1: shutdown
 [        ] Android Lint: Disposing Uast application environment in lint classloader [32.0.1_true]
-[  +99 ms] Build 178668df-4241-4647-9bf6-692e3b532279 is closed
-[        ] [Incubating] Problems report is available at: file:///home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter/build/reports/problems/problems-report.html
+[  +99 ms] Build 981759ee-67fe-48a6-b4eb-4593021314ef is closed
+[   +1 ms] [Incubating] Problems report is available at: file:///home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter/build/reports/problems/problems-report.html
 [        ] Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 [        ] You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
 [        ] For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
-[        ] BUILD SUCCESSFUL in 4m 8s
+[        ] BUILD SUCCESSFUL in 4m 6s
 [        ] 186 actionable tasks: 181 executed, 5 up-to-date
 [        ] Gradle was unable to watch the file system for changes. Unable to watch same file twice via different paths: Already watching path: /home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter/android.
-[ +337 ms] Running Gradle task 'assembleRelease'... (completed in 249.2s)
+[ +345 ms] Running Gradle task 'assembleRelease'... (completed in 247.4s)
 [   +1 ms] Calculate SHA1: LocalDirectory: '/home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter/build/app/outputs/flutter-apk'/app-release.apk
-[ +763 ms] ✓ Built build/app/outputs/flutter-apk/app-release.apk (50.6MB)
-[   +5 ms] "flutter apk" took 250,382ms.
-[  +10 ms] Running 1 shutdown hook
+[ +829 ms] ✓ Built build/app/outputs/flutter-apk/app-release.apk (50.6MB)
+[   +5 ms] "flutter apk" took 248,591ms.
+[   +9 ms] Running 1 shutdown hook
 [        ] Shutdown hooks complete
-[   +1 ms] exiting with code 0
+[        ] exiting with code 0
