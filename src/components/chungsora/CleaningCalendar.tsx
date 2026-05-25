@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -91,7 +91,7 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
             <ChevronLeft size={18} />
           </button>
           <span className="min-w-[96px] text-center text-sm font-bold text-[#2f3438]">
-            {viewYear}\ub144 {viewMonth}\uc6d4
+            {`${viewYear}\uB144 ${viewMonth}\uC6D4`}
           </span>
           <button
             type="button"
@@ -143,3 +143,4 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
     </div>
   );
 }
+
