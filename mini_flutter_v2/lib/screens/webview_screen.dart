@@ -24,8 +24,6 @@ class _WebViewScreenState extends State<WebViewScreen> {
         onWebResourceError: (_) {},
       ))
       ..loadRequest(Uri.parse(ApiConfig.childPwaUrl));
-
-    _controller.setOnPlatformPermissionRequest((request) => request.grant());
   }
 
   @override

@@ -26,21 +26,44 @@ function toTodayKey(now: Date) {
   ).padStart(2, '0')}`;
 }
 
+function applyPolicy(p: { lock_time?: string; lock_days?: string; lock_dates?: string }) {
+  return {
+    lock_time: p.lock_time || '17:00',
+    lock_days: p.lock_days || '',
+    lock_dates: p.lock_dates || '',
+  };
+}
+
 export function useLockState() {
   const [policy, setPolicy] = useState<LockPolicyLite | null>(null);
   const [tick, setTick] = useState(() => new Date());
   const phase = useCleaningSessionStore((s) => s.phase);
 
+  // 정책 fetch (최초 + 60초마다 갱신, 실패 시 5초 후 재시도)
   useEffect(() => {
-    void fetchLockPolicy()
-      .then((p) => {
-        setPolicy({
-          lock_time: p.lock_time || '17:00',
-          lock_days: p.lock_days || '',
-          lock_dates: p.lock_dates || '',
+    let cancelled = false;
+    let retryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const load = () => {
+      void fetchLockPolicy()
+        .then((p) => {
+          if (!cancelled) setPolicy(applyPolicy(p));
+        })
+        .catch(() => {
+          if (!cancelled) {
+            retryTimer = setTimeout(load, 5_000);
+          }
         });
-      })
-      .catch(() => undefined);
+    };
+
+    load();
+    const interval = setInterval(load, 60_000);
+
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+      if (retryTimer) clearTimeout(retryTimer);
+    };
   }, []);
 
   // 30초마다 현재 시각을 갱신하여 잠금 시간이 되면 자동으로 감지
