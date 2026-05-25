@@ -104,7 +104,7 @@ jobs:
           signing_block = '    signingConfigs {\n        if (keyPropertiesFile.exists()) {\n            create("release") {\n                keyAlias = keyProperties["keyAlias"] as String\n                keyPassword = keyProperties["keyPassword"] as String\n                storeFile = file(keyProperties["storeFile"] as String)\n                storePassword = keyProperties["storePassword"] as String\n            }\n        }\n    }\n'
           if 'signingConfigs' not in c:
               c = c.replace('    defaultConfig {', signing_block + '    defaultConfig {', 1)
-          c = c.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = if (keyPropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")')
+          c = c.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")')
           with open(path, 'w') as f:
               f.write(c)
           print("v1 signing config patched")
@@ -340,7 +340,7 @@ jobs:
           signing_block = '    signingConfigs {\n        if (keyPropertiesFile.exists()) {\n            create("release") {\n                keyAlias = keyProperties["keyAlias"] as String\n                keyPassword = keyProperties["keyPassword"] as String\n                storeFile = file(keyProperties["storeFile"] as String)\n                storePassword = keyProperties["storePassword"] as String\n            }\n        }\n    }\n'
           if 'signingConfigs' not in c:
               c = c.replace('    defaultConfig {', signing_block + '    defaultConfig {', 1)
-          c = c.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = if (keyPropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")')
+          c = c.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = signingConfigs.findByName("release") ?: signingConfigs.getByName("debug")')
           with open(path, 'w') as f:
               f.write(c)
           print("v2 signing config patched")
