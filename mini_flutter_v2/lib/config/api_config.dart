@@ -9,8 +9,10 @@ class ApiConfig {
 
   static const String lockPolicyPath = '/api/v1/lock/policy';
 
-  static const String childPwaUrl =
-      'https://mini-project-frontend-git-main-songjimins-projects-3aea36a6.vercel.app/child';
+  static const String childPwaUrl = String.fromEnvironment(
+    'CHILD_PWA_URL',
+    defaultValue: 'https://www.mini3.cloud/child',
+  );
 }
 
 String resolveUploadUrl(String? path) {

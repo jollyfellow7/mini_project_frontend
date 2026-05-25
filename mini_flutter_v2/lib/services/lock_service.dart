@@ -26,6 +26,7 @@ class LockService extends ChangeNotifier {
   LockPolicy? _policy;
   LockStatus? _status;
   bool _uiLocked = false;
+  bool _cleaningOverlayHidden = false;
   bool _polling = false;
   String? _lastError;
   Timer? _timer;
@@ -117,7 +118,9 @@ class LockService extends ChangeNotifier {
       final shouldLock = pendingAuto ||
           _scheduler.shouldLockNow(_policy!, unlockedToday: unlockedToday);
 
-      if (shouldLock && !(_status?.lockTaskActive ?? false)) {
+      if (_cleaningOverlayHidden) {
+        _uiLocked = false;
+      } else if (shouldLock && !(_status?.lockTaskActive ?? false)) {
         await _applyNativeLock();
       } else if (!shouldLock && (_status?.lockTaskActive ?? false)) {
         await LockBridge.stopLock();
@@ -151,7 +154,15 @@ class LockService extends ChangeNotifier {
     }
   }
 
+  /// 네이티브 잠금 오버레이만 숨기고 WebView에서 청소 미션 진행
+  void beginCleaningSession() {
+    _cleaningOverlayHidden = true;
+    _uiLocked = false;
+    notifyListeners();
+  }
+
   Future<void> unlock() async {
+    _cleaningOverlayHidden = false;
     await LockBridge.stopLock();
     final prefs = await SharedPreferences.getInstance();
     final today = LockScheduler.todayKey();

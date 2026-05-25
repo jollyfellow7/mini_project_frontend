@@ -12,6 +12,7 @@ export default function ChildHomePage() {
   const [summary, setSummary] = useState<FamilySummary | null>(null);
   const [quests, setQuests] = useState<DailyQuest[]>([]);
   const phase = useCleaningSessionStore((s) => s.phase);
+  const setPhase = useCleaningSessionStore((s) => s.setPhase);
   const inMission = phase !== 'idle' && phase !== 'unlock';
 
   useEffect(() => {
@@ -71,7 +72,10 @@ export default function ChildHomePage() {
         ) : (
           <button
             type="button"
-            onClick={() => router.push('/child/lock')}
+            onClick={() => {
+              setPhase('dirty');
+              router.push('/child/mission/before');
+            }}
             className="ch-btn-primary block py-4 text-center text-[15px]"
           >
             오늘 방 청소 미션

@@ -29,10 +29,10 @@ class _MainShellState extends State<MainShell> {
   /// 잠금 화면 "청소 시작" 버튼 — PWA 청소 경로로 이동 후 오버레이 숨김
   /// 실제 잠금 해제는 FCM "unlock" 메시지 수신 시
   void _onStartCleaning() {
+    widget.lockService.beginCleaningSession();
     _controller.loadRequest(
-      Uri.parse('${ApiConfig.childPwaUrl}/cleaning'),
+      Uri.parse('${ApiConfig.childPwaUrl}/mission/before'),
     );
-    setState(() {});
   }
 
   @override

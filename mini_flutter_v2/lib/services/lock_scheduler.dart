@@ -16,8 +16,18 @@ class LockScheduler {
 
   bool shouldLockNow(LockPolicy policy, {required bool unlockedToday}) {
     if (unlockedToday) return false;
-    if (!_isLockDay(policy.lockDays)) return false;
+    if (!_isLockDay(policy.lockDays) && !_isLockDate(policy.lockDates)) {
+      return false;
+    }
     return _isPastLockTime(policy.lockTime);
+  }
+
+  bool _isLockDate(String lockDates) {
+    final today = todayKey();
+    for (final part in lockDates.split(',')) {
+      if (part.trim() == today) return true;
+    }
+    return false;
   }
 
   bool _isLockDay(String lockDays) {

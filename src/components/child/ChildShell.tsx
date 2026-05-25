@@ -40,12 +40,13 @@ export function ChildShell({ children }: { children: React.ReactNode }) {
     if (redirect) router.replace(redirect);
   }, [hydrated, pathname, childPaired, router]);
 
+  // 잠금 시간이어도 청소 미션 플로우(/child/mission 등)는 유지 — 홈·로그만 잠금 화면으로
   useEffect(() => {
     if (!hydrated) return;
-    if (isLocked && !pathname.startsWith('/child/lock')) {
+    if (isLocked && !isFlowPath && !pathname.startsWith('/child/lock')) {
       router.replace('/child/lock');
     }
-  }, [hydrated, isLocked, pathname, router]);
+  }, [hydrated, isLocked, isFlowPath, pathname, router]);
 
   useEffect(() => {
     setRole('child');

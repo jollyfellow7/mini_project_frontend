@@ -2,7 +2,20 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { fetchLockPolicy } from '@/lib/chungsora/clientApi';
-import { useCleaningSessionStore } from '@/lib/chungsora/cleaningSessionStore';
+import {
+  useCleaningSessionStore,
+  type SessionPhase,
+} from '@/lib/chungsora/cleaningSessionStore';
+
+/** 잠금 시간이어도 청소 미션·해제 플로우는 막지 않음 */
+const MISSION_PHASES = new Set<SessionPhase>([
+  'dirty',
+  'scanning',
+  'quest',
+  'after',
+  'verifying',
+  'unlock',
+]);
 
 type LockPolicyLite = {
   lock_time: string;
@@ -74,7 +87,8 @@ export function useLockState() {
 
   return useMemo(() => {
     if (!policy) return false;
-    if (phase === 'unlock') return false;
+    // 잠금 시간이 지나도 청소 미션 진행 중에는 UI 잠금·리다이렉트 하지 않음
+    if (MISSION_PHASES.has(phase)) return false;
 
     const now = tick;
     const todayDay = DAY_MAP[now.getDay()];
