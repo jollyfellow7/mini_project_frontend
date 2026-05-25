@@ -86,7 +86,7 @@ jobs:
           KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > mini_flutter/android/chungsora-release.jks
+          echo "$KEYSTORE_BASE64" | tr -d '\n\r ' | base64 -d > mini_flutter/android/chungsora-release.jks
           printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../chungsora-release.jks\n' \
             "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEYSTORE_ALIAS" \
             > mini_flutter/android/key.properties
@@ -322,7 +322,7 @@ jobs:
           KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 -d > mini_flutter_v2/android/chungsora-release.jks
+          echo "$KEYSTORE_BASE64" | tr -d '\n\r ' | base64 -d > mini_flutter_v2/android/chungsora-release.jks
           printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../chungsora-release.jks\n' \
             "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEYSTORE_ALIAS" \
             > mini_flutter_v2/android/key.properties
