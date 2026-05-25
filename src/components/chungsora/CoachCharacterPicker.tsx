@@ -18,18 +18,18 @@ type CoachCharacterPickerProps = {
   informal?: boolean;
   onInformalChange?: (v: boolean) => void;
   /**
-   * true 이면 "미션 진행 중" 상태 — 카드 클릭소개 팝업은 허용하되
+   * true 이면 "미션 진행 중" 상태 - 카드 클릭 소개 팝업은 허용하되
    * 확정 시 큐에 저장, 미션 종료 후(false로 바뀌는 시점) 자동으로 onChange 실행
    */
   disabled?: boolean;
   title?: string;
-  /** 자녀 나이 — 추청 배지 표시용 (선택) */
+  /** 자녀 나이 - 추천 배지 표시용 (선택) */
   childAge?: number | null;
 };
 
-// ─── 음성 캐시 (모듈 레벨 — 컴포넌트 언마운트 후에도 유지) ───────────────────────
-let _voiceCache: SpeechSynthesisVoice[] = [];
-let _voiceInitialized = false;
+// 음성 캐시 (모듈 레벨 - 컴포넌트 언마운트 후에도 유지)
+let voiceCache: SpeechSynthesisVoice[] = [];
+let voiceCacheInitialized = false;
 
 function initVoiceCache() {
   if (voiceCacheInitialized || typeof window === 'undefined' || !window.speechSynthesis) return;
@@ -59,6 +59,7 @@ function speakDirect(text: string, rate = 0.95) {
   const trimmed = text.trim();
   if (!trimmed) return;
 
+  const synth = window.speechSynthesis;
   if (synth.paused) synth.resume();
   if (synth.speaking || synth.pending) synth.cancel();
 
@@ -83,9 +84,18 @@ export function CoachCharacterPicker({
   title = '아이에게 들려줄 안내 친구',
   childAge = null,
 }: CoachCharacterPickerProps) {
-  const [mounted, setMounted] = useState(false);
+  const canUsePortal = typeof document !== 'undefined';
+  const [detailId, setDetailId] = useState<CoachCharacterId | null>(null);
+  const [queuedId, setQueuedId] = useState<CoachCharacterId | null>(null);
+  const [toastName, setToastName] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const prevDisabled = useRef(disabled);
+
   useEffect(() => {
     initVoiceCache();
+    if (!canUsePortal) return;
+
     const onVisibility = () => {
       if (document.visibilityState === 'hidden') {
         setDetailId(null);
@@ -95,12 +105,8 @@ export function CoachCharacterPicker({
 
     document.addEventListener('visibilitychange', onVisibility);
     return () => document.removeEventListener('visibilitychange', onVisibility);
-  }, []);
+  }, [canUsePortal]);
 
-  const [detailId, setDetailId] = useState<CoachCharacterId | null>(null);
-  const [queuedId, setQueuedId] = useState<CoachCharacterId | null>(null);
-
-  const prevDisabled = useRef(disabled);
   useEffect(() => {
     if (prevDisabled.current && !disabled && queuedId !== null) {
       onChange(queuedId);
@@ -109,8 +115,11 @@ export function CoachCharacterPicker({
     prevDisabled.current = disabled;
   }, [disabled, queuedId, onChange]);
 
-  const [toastName, setToastName] = useState<string | null>(null);
-  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   const showToast = (name: string, queued = false) => {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -133,7 +142,10 @@ export function CoachCharacterPicker({
       return;
     }
 
-  const pendingId = disabled ? queuedId : null;
+    onChange(id);
+    setQueuedId(null);
+    showToast(COACH_CHARACTERS[id].name, false);
+  };
 
   return (
     <div className="flex flex-col gap-3">
@@ -150,6 +162,7 @@ export function CoachCharacterPicker({
           const coach = COACH_CHARACTERS[id];
           const isCurrent = value === id;
           const isPending = pendingId === id;
+
           return (
             <button
               key={id}
@@ -229,7 +242,7 @@ export function CoachCharacterPicker({
         미리 들어보기
       </button>
 
-      {mounted &&
+      {canUsePortal &&
         detail &&
         createPortal(
           <div
@@ -271,7 +284,9 @@ export function CoachCharacterPicker({
 
               <button
                 type="button"
-                onClick={() => speakDirect(coachIntroSample(detail.id, informal && detail.supportsInformal), detail.ttsRate)}
+                onClick={() =>
+                  speakDirect(coachIntroSample(detail.id, informal && detail.supportsInformal), detail.ttsRate)
+                }
                 className="mt-3 w-full rounded-xl border-2 border-[#00b8cf] py-2.5 text-sm font-bold text-[#00b8cf] transition active:bg-[#e6f9fc]"
               >
                 미리 들어보기
@@ -304,7 +319,7 @@ export function CoachCharacterPicker({
           document.body,
         )}
 
-      {mounted &&
+      {canUsePortal &&
         toastName &&
         createPortal(
           <div

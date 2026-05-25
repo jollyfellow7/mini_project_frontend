@@ -57,13 +57,12 @@ function LogList({ onSelect }: { onSelect: (date: string) => void }) {
           .filter((v): v is { date: string; score: number } => !!v)
           .map((v) => ({ type: 'cleaning', date: v.date, score: v.score }));
 
-        const propose: LogItem[] = (proposals.threads ?? [])
-          .map((t) => {
-            const date = typeof t.updatedAt === 'string' ? t.updatedAt.slice(0, 10) : '';
-            if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return null;
-            return { type: 'propose' as const, date, label: t.label };
-          })
-          .filter((v): v is LogItem => !!v);
+        const propose: LogItem[] = (proposals.threads ?? []).reduce<LogItem[]>((acc, t) => {
+          const date = typeof t.updatedAt === 'string' ? t.updatedAt.slice(0, 10) : '';
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return acc;
+          acc.push({ type: 'propose', date, label: t.label });
+          return acc;
+        }, []);
 
         const quest: LogItem[] = (quests.quests ?? [])
           .map((q) => ({ type: 'quest' as const, date: '', label: q.title }))
