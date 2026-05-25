@@ -70,7 +70,7 @@ export function ChildShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="mx-auto flex min-h-dvh w-full max-w-lg flex-col bg-[#f7f9fa]">
-      <main className="flex-1 pb-24">{children}</main>
+      <main className="flex-1 pb-20">{children}</main>
       <ChildBottomNav />
     </div>
   );
