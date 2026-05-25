@@ -16,7 +16,6 @@ export default function ChildUnlockPage() {
   const cleanliness = useCleaningSessionStore((s) => s.cleanliness);
   const verifyComment = useCleaningSessionStore((s) => s.verifyComment);
   const streakDays = useCleaningSessionStore((s) => s.streakDays);
-  const resetSession = useCleaningSessionStore((s) => s.resetSession);
   const baseCleanWon = useSettingsStore((s) => s.baseCleanWon);
   const passScore = useSettingsStore((s) => s.passScore);
 
@@ -37,7 +36,6 @@ export default function ChildUnlockPage() {
   }, [passed, payout.finalP, score]);
 
   const goHome = () => {
-    resetSession();
     router.push('/child/home');
   };
 

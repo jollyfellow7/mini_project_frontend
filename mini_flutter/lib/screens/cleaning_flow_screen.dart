@@ -106,12 +106,12 @@ class _CleaningFlowScreenState extends State<CleaningFlowScreen> {
     setState(() => _busy = true);
     try {
       final captures = _session.afterCaptures.map((c) => c!).toList();
+      // AI 채점만 실패했을 때 '청소 후 촬영'으로 되돌려 재시도하게 한다.
       final res = await _orchestrator.compareAllAfterSlots(captures);
-      await _cleaningApi.patchLogMeta(
-        date: todayLogDate(),
-        score: res.cleanliness,
-        streakDays: res.streakDays,
-      );
+
+      // 결과 확정. 이 시점 이후의 부수효과(서버 기록·포인트 적립·언락)가 실패해도
+      // 결과 화면을 'after' 로 되돌리지 않는다.
+      // (통과했는데 다시 청소 후 촬영 단계로 튕기는 문제의 핵심 원인)
       _session.setVerifyResult(
         score: res.cleanliness,
         comment: res.comment,
@@ -120,11 +120,29 @@ class _CleaningFlowScreenState extends State<CleaningFlowScreen> {
         streak: res.streakDays,
       );
 
+      try {
+        await _cleaningApi.patchLogMeta(
+          date: todayLogDate(),
+          score: res.cleanliness,
+          streakDays: res.streakDays,
+        );
+      } catch (_) {
+        // 로그 기록 실패는 무시 — 결과는 이미 확정됨
+      }
+
       if (res.passed) {
-        final payout = PayoutCalc.calc(res.baseCleanWon, res.cleanliness, res.streakDays);
-        final earnedP = payout.finalP.round().clamp(1, 10000);
-        await _pointsApi.earnPoints(earnedP.toDouble(), '청소 완료 · AI ${res.cleanliness}점');
-        await widget.lockService.unlock();
+        try {
+          final payout = PayoutCalc.calc(res.baseCleanWon, res.cleanliness, res.streakDays);
+          final earnedP = payout.finalP.round().clamp(1, 10000);
+          await _pointsApi.earnPoints(earnedP.toDouble(), '청소 완료 · AI ${res.cleanliness}점');
+        } catch (_) {
+          // 포인트 적립 실패는 무시
+        }
+        try {
+          await widget.lockService.unlock();
+        } catch (_) {
+          // 언락 호출이 실패해도 결과 화면은 유지
+        }
       }
     } on OrchestratorException catch (e) {
       _session.setError(e.messageKo());
@@ -152,8 +170,12 @@ class _CleaningFlowScreenState extends State<CleaningFlowScreen> {
           return UnlockResultScreen(
             session: _session,
             onDone: () {
-              _session.reset();
-              Navigator.of(context).pop();
+              // 통과 후 [홈] 탭으로 복귀.
+              // reset()을 먼저 부르면 phase가 촬영 단계로 바뀌며 촬영 화면이
+              // 다시 그려져 "촬영 화면으로 튕기는" 버그가 생긴다.
+              // 그래서 reset 없이 청소 플로우 라우트를 전부 닫아 MainShell(홈)로 돌아간다.
+              // (세션은 화면 dispose 시 정리됨)
+              Navigator.of(context).popUntil((route) => route.isFirst);
             },
             onRetry: () {
               Navigator.of(context).pushReplacement(

@@ -89,11 +89,18 @@ class _MeTabState extends State<MeTab> {
           widget.lockService.requestBatteryExemption();
         }),
         const SizedBox(height: 16),
-        if (widget.lockService.status?.deviceOwner == true)
-          OutlinedButton(
-            onPressed: widget.lockService.forceLock,
-            child: const Text('테스트 잠금 (개발)'),
+        // 데모/시연용 잠금. Device Owner 가 아니어도 동작한다.
+        // forceLock() → _applyNativeLock() 이 NOT_DEVICE_OWNER 를 잡아
+        // _uiLocked = true 로 설정하므로 MainShell 이 잠금 화면 오버레이를 띄운다.
+        // (실제 OS 강제 잠금은 Device Owner 필요 — 시연 영상엔 이 오버레이로 충분)
+        OutlinedButton.icon(
+          onPressed: () => widget.lockService.forceLock(),
+          icon: const Icon(Icons.lock_outline),
+          label: const Text('잠금 화면 시연 (테스트)'),
+          style: OutlinedButton.styleFrom(
+            padding: const EdgeInsets.symmetric(vertical: 14),
           ),
+        ),
       ],
     );
   }
