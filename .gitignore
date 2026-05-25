@@ -25,7 +25,15 @@ coverage/
 .DS_Store
 Thumbs.db
 
-# Repo 내 Flutter APK 소스 (build-apk.yml)
+# Firebase / Google (CI: Secret GOOGLE_SERVICES_JSON_V2 — 커밋 금지)
+google-services.json
+**/google-services.json
+GoogleService-Info.plist
+**/GoogleService-Info.plist
+firebase-adminsdk*.json
+**/firebase-adminsdk*.json
+
+# Repo 내 Flutter APK v1 (build-apk.yml)
 mini_flutter/.dart_tool/
 mini_flutter/.pub/
 mini_flutter/.pub-cache/
@@ -35,3 +43,20 @@ mini_flutter/.flutter-plugins-dependencies
 mini_flutter/android/.gradle/
 mini_flutter/android/local.properties
 mini_flutter/android/**/build/
+
+# Repo 내 Flutter APK v2 (build-apk-v2)
+mini_flutter_v2/.dart_tool/
+mini_flutter_v2/.pub/
+mini_flutter_v2/.pub-cache/
+mini_flutter_v2/build/
+mini_flutter_v2/.flutter-plugins
+mini_flutter_v2/.flutter-plugins-dependencies
+mini_flutter_v2/android/.gradle/
+mini_flutter_v2/android/local.properties
+mini_flutter_v2/android/app/google-services.json
+mini_flutter_v2/android/**/build/
+
+# Android signing
+**/*.jks
+**/*.keystore
+**/key.properties

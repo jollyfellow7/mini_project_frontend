@@ -47,3 +47,9 @@ local.properties
 **/android/key.properties
 *.jks
 *.keystore
+
+# Firebase (CI Secret 주입 — 로컬 다운로드 파일 커밋 금지)
+google-services.json
+**/google-services.json
+GoogleService-Info.plist
+**/GoogleService-Info.plist
