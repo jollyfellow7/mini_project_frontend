@@ -5,7 +5,7 @@ import '../config/api_config.dart';
 import '../services/lock_service.dart';
 import 'lock_screen.dart';
 
-/// v2 메인 셸 — WebView(PWA) 항상 백그라운드 유지, 잠금 시 오버레이 표시
+/// WebView(PWA) + Lock Task — 잠금 시 다른 앱 사용 불가, 앱 안에서만 청소 미션
 class MainShell extends StatefulWidget {
   final LockService lockService;
   const MainShell({super.key, required this.lockService});
@@ -20,14 +20,39 @@ class _MainShellState extends State<MainShell> {
   @override
   void initState() {
     super.initState();
+    final lock = widget.lockService;
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFFF7F9FA))
+      ..addJavaScriptChannel(
+        'ChungsoraNative',
+        onMessageReceived: (msg) {
+          switch (msg.message) {
+            case 'unlock':
+              lock.unlock();
+              break;
+            case 'missionStart':
+              lock.beginCleaningSession();
+              break;
+          }
+        },
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageFinished: (url) => _onPwaNavigated(url),
+        ),
+      )
       ..loadRequest(Uri.parse(ApiConfig.childPwaUrl));
   }
 
-  /// 잠금 화면 "청소 시작" 버튼 — PWA 청소 경로로 이동 후 오버레이 숨김
-  /// 실제 잠금 해제는 FCM "unlock" 메시지 수신 시
+  void _onPwaNavigated(String url) {
+    if (url.contains('/mission/') ||
+        url.contains('/child/dirty') ||
+        url.contains('/child/after')) {
+      widget.lockService.beginCleaningSession();
+    }
+  }
+
   void _onStartCleaning() {
     widget.lockService.beginCleaningSession();
     _controller.loadRequest(
@@ -40,16 +65,23 @@ class _MainShellState extends State<MainShell> {
     return ListenableBuilder(
       listenable: widget.lockService,
       builder: (context, _) {
-        if (widget.lockService.uiLocked) {
-          return LockScreen(
-            lockService: widget.lockService,
-            onStartCleaning: _onStartCleaning,
-          );
-        }
-        return Scaffold(
-          body: SafeArea(
-            child: WebViewWidget(controller: _controller),
-          ),
+        final showLockOverlay =
+            widget.lockService.uiLocked && !widget.lockService.missionUiActive;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            Scaffold(
+              body: SafeArea(
+                child: WebViewWidget(controller: _controller),
+              ),
+            ),
+            if (showLockOverlay)
+              LockScreen(
+                lockService: widget.lockService,
+                onStartCleaning: _onStartCleaning,
+              ),
+          ],
         );
       },
     );

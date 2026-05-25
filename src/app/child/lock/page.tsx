@@ -13,6 +13,7 @@ import {
   type CoachCharacterId,
 } from '@/lib/chungsora/coachCharacters';
 import { useCleaningSessionStore } from '@/lib/chungsora/cleaningSessionStore';
+import { postToNative } from '@/lib/chungsora/nativeBridge';
 import { useSettingsStore } from '@/lib/chungsora/settingsStore';
 
 export default function ChildLockPage() {
@@ -88,7 +89,10 @@ export default function ChildLockPage() {
         </p>
         <Link
           href="/child/mission/before"
-          onClick={() => setPhase('dirty')}
+          onClick={() => {
+            setPhase('dirty');
+            postToNative('missionStart');
+          }}
           className="ch-btn-primary mt-8 block w-full max-w-xs py-4 text-center text-[15px]"
         >
           오늘 방 청소 미션

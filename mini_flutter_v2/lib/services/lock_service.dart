@@ -10,7 +10,7 @@ import 'lock_policy_client.dart';
 import 'lock_scheduler.dart';
 import 'session_store.dart';
 
-/// BE lock/policy 폴링 → 스케줄 판단 → native LockPlugin · 백그라운드 감시
+/// BE lock/policy 폴링 → Lock Task(기기 전체 고정) → 미션 통과 시에만 해제
 class LockService extends ChangeNotifier {
   LockService({
     LockPolicyClient? policyClient,
@@ -26,7 +26,7 @@ class LockService extends ChangeNotifier {
   LockPolicy? _policy;
   LockStatus? _status;
   bool _uiLocked = false;
-  bool _cleaningOverlayHidden = false;
+  bool _missionUiActive = false;
   bool _polling = false;
   String? _lastError;
   Timer? _timer;
@@ -35,6 +35,9 @@ class LockService extends ChangeNotifier {
   LockPolicy? get policy => _policy;
   LockStatus? get status => _status;
   bool get uiLocked => _uiLocked;
+  bool get missionUiActive => _missionUiActive;
+  bool get lockTaskActive => _status?.lockTaskActive ?? false;
+  bool get deviceOwner => _status?.deviceOwner ?? false;
   String? get lastError => _lastError;
   bool get isPaired => _paired;
   DateTime? get lastTickAt => _lastTickAt;
@@ -59,7 +62,6 @@ class LockService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// JWT 만료 등으로 세션이 무효화된 뒤 UI·폴링 상태 정리
   void forceUnpaired() {
     _paired = false;
     _policy = null;
@@ -75,7 +77,10 @@ class LockService extends ChangeNotifier {
   Future<void> _refreshStatus() async {
     try {
       _status = await LockBridge.getStatus();
-      _uiLocked = _status!.locked || _status!.lockTaskActive;
+      final task = _status!.lockTaskActive;
+      if (!_missionUiActive) {
+        _uiLocked = task || _status!.locked;
+      }
     } catch (e) {
       _lastError = e.toString();
     }
@@ -88,6 +93,7 @@ class LockService extends ChangeNotifier {
     await LockBridge.syncPolicy(
       lockTime: _policy!.lockTime,
       lockDays: _policy!.lockDays,
+      lockDates: _policy!.lockDates,
       allowlist: _policy!.allowlist,
       allowPhone: _policy!.allowPhone,
       unlockedDate: unlocked,
@@ -117,18 +123,19 @@ class LockService extends ChangeNotifier {
       final unlockedToday = await _isUnlockedToday();
       final shouldLock = pendingAuto ||
           _scheduler.shouldLockNow(_policy!, unlockedToday: unlockedToday);
+      final taskActive = _status?.lockTaskActive ?? false;
 
-      if (_cleaningOverlayHidden) {
-        _uiLocked = false;
-      } else if (shouldLock && !(_status?.lockTaskActive ?? false)) {
-        await _applyNativeLock();
-      } else if (!shouldLock && (_status?.lockTaskActive ?? false)) {
+      if (shouldLock && !unlockedToday) {
+        if (!taskActive) {
+          await _applyNativeLock();
+        }
+        _uiLocked = !_missionUiActive;
+      } else if (!shouldLock && taskActive) {
         await LockBridge.stopLock();
+        _missionUiActive = false;
         _uiLocked = false;
-      } else if ((_status?.locked ?? false) && !(_status?.lockTaskActive ?? false)) {
-        await _applyNativeLock();
       } else {
-        _uiLocked = _status?.lockTaskActive ?? false;
+        _uiLocked = (taskActive || (_status?.locked ?? false)) && !_missionUiActive;
       }
 
       await _refreshStatus();
@@ -154,15 +161,23 @@ class LockService extends ChangeNotifier {
     }
   }
 
-  /// 네이티브 잠금 오버레이만 숨기고 WebView에서 청소 미션 진행
-  void beginCleaningSession() {
-    _cleaningOverlayHidden = true;
+  /// Lock Task 유지 — Flutter 오버레이만 내리고 WebView에서 미션 진행
+  Future<void> beginCleaningSession() async {
+    _missionUiActive = true;
     _uiLocked = false;
+
+    if (_policy != null) {
+      final unlockedToday = await _isUnlockedToday();
+      if (_scheduler.shouldLockNow(_policy!, unlockedToday: unlockedToday) &&
+          !(_status?.lockTaskActive ?? false)) {
+        await _applyNativeLock();
+      }
+    }
     notifyListeners();
   }
 
   Future<void> unlock() async {
-    _cleaningOverlayHidden = false;
+    _missionUiActive = false;
     await LockBridge.stopLock();
     final prefs = await SharedPreferences.getInstance();
     final today = LockScheduler.todayKey();
@@ -171,6 +186,7 @@ class LockService extends ChangeNotifier {
       await LockBridge.syncPolicy(
         lockTime: _policy!.lockTime,
         lockDays: _policy!.lockDays,
+        lockDates: _policy!.lockDates,
         allowlist: _policy!.allowlist,
         allowPhone: _policy!.allowPhone,
         unlockedDate: today,
@@ -183,6 +199,7 @@ class LockService extends ChangeNotifier {
   }
 
   Future<void> forceLock() async {
+    _missionUiActive = false;
     _policy ??= LockPolicy(
       lockTime: '00:00',
       lockDays: '월·화·수·목·금·토·일',
@@ -216,14 +233,19 @@ class LockService extends ChangeNotifier {
     )).resolveAllowlist();
     try {
       await LockBridge.startLock(list);
+      _lastError = null;
     } on PlatformException catch (e) {
       if (e.code == 'NOT_DEVICE_OWNER') {
+        _lastError = 'NOT_DEVICE_OWNER';
         _uiLocked = true;
         return;
       }
       rethrow;
     }
-    _uiLocked = true;
+    await _refreshStatus();
+    if (!_missionUiActive) {
+      _uiLocked = true;
+    }
   }
 
   Future<bool> _isUnlockedToday() async {

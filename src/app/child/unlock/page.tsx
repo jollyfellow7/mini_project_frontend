@@ -8,6 +8,7 @@ import { MissionStepper } from '@/components/chungsora/MissionStepper';
 import { earnPoints } from '@/lib/chungsora/clientApi';
 import { useCleaningSessionStore } from '@/lib/chungsora/cleaningSessionStore';
 import { useSettingsStore } from '@/lib/chungsora/settingsStore';
+import { postToNative } from '@/lib/chungsora/nativeBridge';
 import { calcCleaningPayout } from '@/lib/chungsora/tokens';
 
 export default function ChildUnlockPage() {
@@ -32,6 +33,7 @@ export default function ChildUnlockPage() {
   useEffect(() => {
     if (!passed) return;
     void earnPoints(payout.finalP, `청소 완료 · AI ${score}점`).catch(() => undefined);
+    postToNative('unlock');
   }, [passed, payout.finalP, score]);
 
   const goHome = () => {

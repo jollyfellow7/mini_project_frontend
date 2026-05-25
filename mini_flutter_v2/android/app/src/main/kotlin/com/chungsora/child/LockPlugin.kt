@@ -88,13 +88,14 @@ class LockPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                 "syncPolicy" -> {
                     val lockTime = call.argument<String>("lockTime") ?: "17:00"
                     val lockDays = call.argument<String>("lockDays") ?: "월·수·금"
+                    val lockDates = call.argument<String>("lockDates") ?: ""
                     @Suppress("UNCHECKED_CAST")
                     val allowlist = call.argument<List<String>>("allowlist") ?: emptyList()
                     val allowPhone = call.argument<Boolean>("allowPhone") ?: true
                     val unlockedDate = call.argument<String>("unlockedDate") ?: ""
                     val paired = call.argument<Boolean>("paired") ?: false
                     LockHelper.syncPolicy(
-                        appContext, lockTime, lockDays, allowlist, allowPhone, unlockedDate, paired,
+                        appContext, lockTime, lockDays, lockDates, allowlist, allowPhone, unlockedDate, paired,
                     )
                     result.success(true)
                 }

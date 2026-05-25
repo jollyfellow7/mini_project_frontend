@@ -104,6 +104,7 @@ class LockBridge {
   static Future<void> syncPolicy({
     required String lockTime,
     required String lockDays,
+    String lockDates = '',
     required List<String> allowlist,
     required bool allowPhone,
     required String unlockedDate,
@@ -112,6 +113,7 @@ class LockBridge {
     await _channel.invokeMethod<void>('syncPolicy', {
       'lockTime': lockTime,
       'lockDays': lockDays,
+      'lockDates': lockDates,
       'allowlist': allowlist,
       'allowPhone': allowPhone,
       'unlockedDate': unlockedDate,

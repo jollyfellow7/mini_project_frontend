@@ -16,6 +16,7 @@ object LockHelper {
     const val KEY_LOCKED = BootReceiver.KEY_LOCKED
     const val KEY_LOCK_TIME = "lock_time"
     const val KEY_LOCK_DAYS = "lock_days"
+    const val KEY_LOCK_DATES = "lock_dates"
     const val KEY_ALLOWLIST = "allowlist_json"
     const val KEY_UNLOCKED_DATE = "unlocked_date"
     const val KEY_PAIRED = "paired"
@@ -34,6 +35,7 @@ object LockHelper {
         ctx: Context,
         lockTime: String,
         lockDays: String,
+        lockDates: String,
         allowlist: List<String>,
         allowPhone: Boolean,
         unlockedDate: String,
@@ -42,6 +44,7 @@ object LockHelper {
         prefs(ctx).edit()
             .putString(KEY_LOCK_TIME, lockTime)
             .putString(KEY_LOCK_DAYS, lockDays)
+            .putString(KEY_LOCK_DATES, lockDates)
             .putString(KEY_ALLOWLIST, JSONArray(allowlist).toString())
             .putBoolean(KEY_ALLOW_PHONE, allowPhone)
             .putString(KEY_UNLOCKED_DATE, unlockedDate)
@@ -72,9 +75,10 @@ object LockHelper {
         if (!p.getBoolean(KEY_PAIRED, false)) return false
         val lockTime = p.getString(KEY_LOCK_TIME, "17:00") ?: "17:00"
         val lockDays = p.getString(KEY_LOCK_DAYS, "월·수·금") ?: "월·수·금"
+        val lockDates = p.getString(KEY_LOCK_DATES, "") ?: ""
         val unlockedDate = p.getString(KEY_UNLOCKED_DATE, "") ?: ""
         val unlockedToday = unlockedDate == LockScheduleEvaluator.todayKey()
-        return LockScheduleEvaluator.shouldLockNow(lockTime, lockDays, unlockedToday)
+        return LockScheduleEvaluator.shouldLockNow(lockTime, lockDays, lockDates, unlockedToday)
     }
 
     fun scheduleNextAlarm(ctx: Context) {

@@ -6,6 +6,7 @@ import { CleaningCalendar } from '@/components/chungsora/CleaningCalendar';
 import { WON_PER_P } from '@/lib/chungsora/tokens';
 import { fetchFamilySummary, fetchDailyQuests, type FamilySummary, type DailyQuest } from '@/lib/chungsora/clientApi';
 import { useCleaningSessionStore } from '@/lib/chungsora/cleaningSessionStore';
+import { postToNative } from '@/lib/chungsora/nativeBridge';
 
 export default function ChildHomePage() {
   const router = useRouter();
@@ -74,6 +75,7 @@ export default function ChildHomePage() {
             type="button"
             onClick={() => {
               setPhase('dirty');
+              postToNative('missionStart');
               router.push('/child/mission/before');
             }}
             className="ch-btn-primary block py-4 text-center text-[15px]"

@@ -19,6 +19,8 @@ class LockScreen extends StatelessWidget {
     final policy = lockService.policy;
     final lockTime = policy?.lockTime ?? '17:00';
     final allowPhone = policy?.allowPhone ?? true;
+    final deviceOwner = lockService.deviceOwner;
+    final lockTask = lockService.lockTaskActive;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: SystemUiOverlayStyle.light,
@@ -73,6 +75,31 @@ class LockScreen extends StatelessWidget {
                     style: TextStyle(
                       color: Colors.white.withValues(alpha: 0.5),
                       fontSize: 12,
+                    ),
+                  ),
+                ],
+                if (!deviceOwner) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF04452).withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      '기기 전체 잠금(Lock Task)을 쓰려면\nDevice Owner 설정이 필요합니다.\n(ADB provisioning — docs/DEVICE_OWNER_SETUP.md)',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.white, fontSize: 11, height: 1.4),
+                    ),
+                  ),
+                ] else if (lockTask) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    '다른 앱은 사용할 수 없어요',
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.6),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],

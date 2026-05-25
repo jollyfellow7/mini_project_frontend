@@ -26,10 +26,24 @@ object LockScheduleEvaluator {
         )
     }
 
-    fun shouldLockNow(lockTime: String, lockDays: String, unlockedToday: Boolean): Boolean {
+    fun shouldLockNow(
+        lockTime: String,
+        lockDays: String,
+        lockDates: String,
+        unlockedToday: Boolean,
+    ): Boolean {
         if (unlockedToday) return false
-        if (!isLockDay(lockDays)) return false
+        if (!isLockDay(lockDays) && !isLockDate(lockDates)) return false
         return isPastLockTime(lockTime)
+    }
+
+    fun isLockDate(lockDates: String): Boolean {
+        if (lockDates.isBlank()) return false
+        val today = todayKey()
+        return lockDates.split(",", "·", " ")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .any { it == today }
     }
 
     fun isLockDay(lockDays: String): Boolean {
