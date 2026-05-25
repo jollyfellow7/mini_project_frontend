@@ -41,6 +41,13 @@ export function ChildShell({ children }: { children: React.ReactNode }) {
   }, [hydrated, pathname, childPaired, router]);
 
   useEffect(() => {
+    if (!hydrated) return;
+    if (isLocked && !pathname.startsWith('/child/lock')) {
+      router.replace('/child/lock');
+    }
+  }, [hydrated, isLocked, pathname, router]);
+
+  useEffect(() => {
     setRole('child');
   }, []);
 
