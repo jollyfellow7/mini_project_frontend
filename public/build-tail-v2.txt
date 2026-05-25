@@ -8,28 +8,28 @@
 [        ] Task ':app:lintVitalReportRelease' is not up-to-date because:
 [        ]   No history is available.
 [        ] Android Lint: Reusing lint classloader 32.0.1_true
-[        ] Resolve mutations for :app:lintVitalRelease (Thread[included builds,5,main]) started.
-[        ] :app:lintVitalRelease (Thread[included builds,5,main]) started.
-[        ] > Task :app:lintVitalRelease
+[        ] Resolve mutations for :app:lintVitalRelease (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:lintVitalRelease (Thread[Execution worker Thread 3,5,main]) started.
+[  +98 ms] > Task :app:lintVitalRelease
 [        ] Caching disabled for task ':app:lintVitalRelease' because:
 [        ]   Build cache is disabled
 [        ]   Caching has been disabled for the task
 [        ] Task ':app:lintVitalRelease' is not up-to-date because:
 [        ]   Task.upToDateWhen is false.
-[+22399 ms] Resolve mutations for :app:compileReleaseArtProfile (Thread[Execution worker,5,main]) started.
-[        ] :app:compileReleaseArtProfile (Thread[Execution worker,5,main]) started.
-[        ] Resolve mutations for :app:convertShrunkResourcesToBinaryRelease (Thread[included builds,5,main]) started.
-[        ] :app:convertShrunkResourcesToBinaryRelease (Thread[included builds,5,main]) started.
-[  +99 ms] > Task :app:convertShrunkResourcesToBinaryRelease
+[+26698 ms] Resolve mutations for :app:compileReleaseArtProfile (Thread[Execution worker Thread 3,5,main]) started.
+[        ] :app:compileReleaseArtProfile (Thread[Execution worker Thread 3,5,main]) started.
+[  +99 ms] Resolve mutations for :app:convertShrunkResourcesToBinaryRelease (Thread[Execution worker,5,main]) started.
+[        ] :app:convertShrunkResourcesToBinaryRelease (Thread[Execution worker,5,main]) started.
+[        ] > Task :app:convertShrunkResourcesToBinaryRelease
 [        ] Custom actions are attached to task ':app:convertShrunkResourcesToBinaryRelease'.
 [        ] Caching disabled for task ':app:convertShrunkResourcesToBinaryRelease' because:
 [        ]   Build cache is disabled
 [        ] Task ':app:convertShrunkResourcesToBinaryRelease' is not up-to-date because:
 [        ]   No history is available.
-[        ] Resolve mutations for :app:optimizeReleaseResources (Thread[included builds,5,main]) started.
-[        ] :app:optimizeReleaseResources (Thread[included builds,5,main]) started.
-[        ] > Task :app:compileReleaseArtProfile
-[        ] Caching disabled for task ':app:compileReleaseArtProfile' because:
+[        ] Resolve mutations for :app:optimizeReleaseResources (Thread[Execution worker,5,main]) started.
+[        ] :app:optimizeReleaseResources (Thread[Execution worker,5,main]) started.
+[  +98 ms] > Task :app:compileReleaseArtProfile
+[   +1 ms] Caching disabled for task ':app:compileReleaseArtProfile' because:
 [        ]   Build cache is disabled
 [        ] Task ':app:compileReleaseArtProfile' is not up-to-date because:
 [        ]   No history is available.
@@ -41,7 +41,7 @@
 [        ]   No history is available.
 [        ] Resolve mutations for :app:packageRelease (Thread[Execution worker,5,main]) started.
 [        ] :app:packageRelease (Thread[Execution worker Thread 3,5,main]) started.
-[ +399 ms] > Task :app:packageRelease
+[ +397 ms] > Task :app:packageRelease
 [        ] Custom actions are attached to task ':app:packageRelease'.
 [        ] Caching disabled for task ':app:packageRelease' because:
 [        ]   Build cache is disabled
@@ -59,7 +59,7 @@
 [        ]   No history is available.
 [        ] Resolve mutations for :app:assembleRelease (Thread[Execution worker Thread 3,5,main]) started.
 [        ] :app:assembleRelease (Thread[Execution worker Thread 3,5,main]) started.
-[  +99 ms] > Task :app:assembleRelease
+[        ] > Task :app:assembleRelease
 [        ] Caching disabled for task ':app:assembleRelease' because:
 [        ]   Build cache is disabled
 [        ] Task ':app:assembleRelease' is not up-to-date because:
@@ -67,7 +67,7 @@
 [        ] AAPT2 aapt2-9.0.1-14304508-linux Daemon #0: shutdown
 [        ] AAPT2 aapt2-9.0.1-14304508-linux Daemon #1: shutdown
 [        ] Android Lint: Disposing Uast application environment in lint classloader [32.0.1_true]
-[        ] Build 1c151297-0f89-4b33-969b-54740fe35263 is closed
+[  +99 ms] Build edf36950-2bee-46f0-b731-90c867171425 is closed
 [        ] [Incubating] Problems report is available at: file:///home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter_v2/build/reports/problems/problems-report.html
 [        ] Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
 [        ] You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
@@ -75,10 +75,10 @@
 [        ] BUILD SUCCESSFUL in 4m 9s
 [        ] 227 actionable tasks: 222 executed, 5 up-to-date
 [        ] Gradle was unable to watch the file system for changes. Unable to watch same file twice via different paths: Already watching path: /home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter_v2/android.
-[ +369 ms] Running Gradle task 'assembleRelease'... (completed in 249.8s)
+[ +367 ms] Running Gradle task 'assembleRelease'... (completed in 249.8s)
 [   +1 ms] Calculate SHA1: LocalDirectory: '/home/runner/work/mini_project_frontend/mini_project_frontend/mini_flutter_v2/build/app/outputs/flutter-apk'/app-release.apk
-[ +707 ms] ✓ Built build/app/outputs/flutter-apk/app-release.apk (46.0MB)
-[   +3 ms] "flutter apk" took 250,810ms.
-[  +10 ms] Running 1 shutdown hook
+[ +747 ms] ✓ Built build/app/outputs/flutter-apk/app-release.apk (46.0MB)
+[   +4 ms] "flutter apk" took 250,814ms.
+[   +9 ms] Running 1 shutdown hook
 [        ] Shutdown hooks complete
-[   +1 ms] exiting with code 0
+[   +2 ms] exiting with code 0
