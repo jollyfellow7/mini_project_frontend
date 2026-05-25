@@ -12,6 +12,18 @@ export type DailyQuest = {
   title: string;
   description: string;
   active: boolean;
+  reward_won: number;
+};
+
+export type DailyQuestListResponse = {
+  quests: DailyQuest[];
+};
+
+export type CompleteDailyQuestResponse = {
+  ok: boolean;
+  already_done?: boolean;
+  reward_won?: number;
+  balance?: number;
 };
 
 export async function fetchShopRewards() {
@@ -44,22 +56,29 @@ export async function deleteShopReward(id: string) {
 }
 
 export async function fetchDailyQuests() {
-  return fetchJson<{ quests: DailyQuest[] }>('/api/v1/rewards/daily-quests', {
+  return fetchJson<DailyQuestListResponse>('/api/v1/rewards/daily-quests', {
     headers: authHeaders(),
   });
 }
 
-export async function createDailyQuest(title: string, description = '') {
-  return fetchJson<{ quests: DailyQuest[] }>('/api/v1/rewards/daily-quests', {
+export async function createDailyQuest(title: string, description = '', reward_won = 1000) {
+  return fetchJson<DailyQuestListResponse>('/api/v1/rewards/daily-quests', {
     method: 'POST',
     headers: authHeaders({ 'Content-Type': 'application/json' }),
-    body: JSON.stringify({ title, description }),
+    body: JSON.stringify({ title, description, reward_won }),
   });
 }
 
 export async function deleteDailyQuest(id: string) {
-  return fetchJson<{ quests: DailyQuest[] }>(`/api/v1/rewards/daily-quests/${id}`, {
+  return fetchJson<DailyQuestListResponse>(`/api/v1/rewards/daily-quests/${id}`, {
     method: 'DELETE',
+    headers: authHeaders(),
+  });
+}
+
+export async function completeDailyQuest(id: string) {
+  return fetchJson<CompleteDailyQuestResponse>(`/api/v1/rewards/daily-quests/${id}/complete`, {
+    method: 'POST',
     headers: authHeaders(),
   });
 }

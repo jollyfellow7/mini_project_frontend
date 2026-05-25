@@ -46,8 +46,11 @@ export {
   fetchDailyQuests,
   createDailyQuest,
   deleteDailyQuest,
+  completeDailyQuest,
   type ShopReward,
   type DailyQuest,
+  type DailyQuestListResponse,
+  type CompleteDailyQuestResponse,
 } from '@/lib/api/rewards';
 
 export {

@@ -1,15 +1,9 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { CleaningCalendar } from '@/components/chungsora/CleaningCalendar';
-import { CoachAvatar } from '@/components/chungsora/CoachAvatar';
 import { WON_PER_P } from '@/lib/chungsora/tokens';
-import {
-  COACH_CHARACTERS,
-  resolveEffectiveCoachId,
-  type CoachCharacterId,
-} from '@/lib/chungsora/coachCharacters';
 import { fetchFamilySummary, fetchDailyQuests, type FamilySummary, type DailyQuest } from '@/lib/chungsora/clientApi';
 import { useCleaningSessionStore } from '@/lib/chungsora/cleaningSessionStore';
 
@@ -17,22 +11,12 @@ export default function ChildHomePage() {
   const router = useRouter();
   const [summary, setSummary] = useState<FamilySummary | null>(null);
   const [quests, setQuests] = useState<DailyQuest[]>([]);
-  const [coachId, setCoachId] = useState<CoachCharacterId>('mentor');
   const phase = useCleaningSessionStore((s) => s.phase);
   const inMission = phase !== 'idle' && phase !== 'unlock';
 
   useEffect(() => {
     void fetchFamilySummary()
-      .then((s) => {
-        setSummary(s);
-        setCoachId(
-          resolveEffectiveCoachId(
-            s.coach_character_id,
-            s.child_coach_character_id,
-            s.effective_coach_character_id,
-          ),
-        );
-      })
+      .then((s) => setSummary(s))
       .catch(() => undefined);
     void fetchDailyQuests()
       .then((r) => setQuests(r.quests))
@@ -75,13 +59,6 @@ export default function ChildHomePage() {
             </ul>
           </div>
         )}
-
-        <div className="ch-card flex items-center gap-2 p-3">
-          <CoachAvatar characterId={coachId} size="sm" />
-          <p className="text-xs text-[#8e8e8e]">
-            오늘 안내 · <span className="font-semibold text-[#1a1e22]">{COACH_CHARACTERS[coachId].name}</span>
-          </p>
-        </div>
 
         {inMission ? (
           <button

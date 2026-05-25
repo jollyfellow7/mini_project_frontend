@@ -31,7 +31,15 @@ export type UploadLogPhotoResponse = {
 
 export type LogCalendarResponse = {
   year_month: string;
-  dates: string[];
+  dates: (
+    | string
+    | {
+        date?: string;
+        log_date?: string;
+        ymd?: string;
+        score?: number;
+      }
+  )[];
   points: number;
 };
 
