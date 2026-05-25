@@ -28,6 +28,7 @@ function toTodayKey(now: Date) {
 
 export function useLockState() {
   const [policy, setPolicy] = useState<LockPolicyLite | null>(null);
+  const [tick, setTick] = useState(() => new Date());
   const phase = useCleaningSessionStore((s) => s.phase);
 
   useEffect(() => {
@@ -42,11 +43,17 @@ export function useLockState() {
       .catch(() => undefined);
   }, []);
 
+  // 30초마다 현재 시각을 갱신하여 잠금 시간이 되면 자동으로 감지
+  useEffect(() => {
+    const t = setInterval(() => setTick(new Date()), 30_000);
+    return () => clearInterval(t);
+  }, []);
+
   return useMemo(() => {
     if (!policy) return false;
     if (phase === 'unlock') return false;
 
-    const now = new Date();
+    const now = tick;
     const todayDay = DAY_MAP[now.getDay()];
     const dayMatch = policy.lock_days
       .split('·')
@@ -67,5 +74,5 @@ export function useLockState() {
     const lockAt = new Date(now);
     lockAt.setHours(Number.isNaN(hRaw) ? 17 : hRaw, Number.isNaN(mRaw) ? 0 : mRaw, 0, 0);
     return now >= lockAt;
-  }, [phase, policy]);
+  }, [phase, policy, tick]);
 }
