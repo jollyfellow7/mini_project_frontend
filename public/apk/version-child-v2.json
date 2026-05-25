@@ -1,8 +1,8 @@
 {
   "version": "0.5.0",
   "build_number": "5",
-  "built_at": "2026-05-25T09:14:37Z",
-  "commit": "32177d908d62b1bf07d0be3c639e415422468540",
+  "built_at": "2026-05-25T09:26:14Z",
+  "commit": "8588d7c9bb8bbc04277fa09bcac0b18efbe325a7",
   "package": "com.chungsora.child_v2",
-  "apk_size_bytes": 46166157
+  "apk_size_bytes": 46182541
 }
