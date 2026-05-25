@@ -5,7 +5,6 @@ import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 import '../models/lock_policy.dart';
 import 'child_http.dart';
-import 'session_store.dart';
 
 class LockPolicyClient {
   LockPolicyClient({http.Client? client}) : _client = client ?? http.Client();

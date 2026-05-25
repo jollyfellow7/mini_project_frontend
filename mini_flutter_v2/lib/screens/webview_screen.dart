@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 import '../config/api_config.dart';
 
 class WebViewScreen extends StatefulWidget {
@@ -23,12 +26,17 @@ class _WebViewScreenState extends State<WebViewScreen> {
         onPageFinished: (_) {},
         onWebResourceError: (_) {},
       ))
-      ..setOnPlatformPermissionRequest(
-        (PlatformWebViewPermissionRequest request) {
-          request.grant();
-        },
-      )
       ..loadRequest(Uri.parse(ApiConfig.childPwaUrl));
+
+    if (Platform.isAndroid) {
+      final androidController =
+          _controller.platform as AndroidWebViewController;
+      androidController.setPermissionCallback(
+        (AndroidPermissionRequest request) async {
+          await request.grant(request.resources);
+        },
+      );
+    }
   }
 
   @override
