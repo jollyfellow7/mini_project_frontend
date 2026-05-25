@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Download, CheckCircle, RefreshCw } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Download, CheckCircle, RefreshCw, Copy, Check } from 'lucide-react';
+
+const PAGE_URL = 'https://www.mini3.cloud/download3';
 
 export default function Download3Page() {
   const [info, setInfo] = useState<{
@@ -12,6 +15,7 @@ export default function Download3Page() {
     apk_size_bytes: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetch('/apk/version-child-v2.json', { cache: 'no-store' })
@@ -22,6 +26,21 @@ export default function Download3Page() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!copied) return;
+    const t = setTimeout(() => setCopied(false), 2000);
+    return () => clearTimeout(t);
+  }, [copied]);
+
+  const copyPageUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(PAGE_URL);
+      setCopied(true);
+    } catch {
+      /* ignore */
+    }
+  };
 
   const builtAt = info?.built_at ?? '';
   // 캐시 우회용 쿼리 파라미터
@@ -69,6 +88,27 @@ export default function Download3Page() {
           <Download size={20} />
           APK 다운로드
         </a>
+
+        <section className="mt-6 rounded-2xl border border-[#eaedef] bg-[#f7f9fa] p-5">
+          <h2 className="text-center text-sm font-bold text-[#2f3438]">QR로 설치</h2>
+          <p className="mt-1 text-center text-xs text-[#828c94]">
+            자녀 폰 카메라로 스캔 → 다운로드 페이지 열림
+          </p>
+          <div className="mt-4 flex flex-col items-center gap-3">
+            <div className="rounded-xl border border-[#eaedef] bg-white p-3">
+              <QRCodeSVG value={PAGE_URL} size={160} level="M" marginSize={1} />
+            </div>
+            <p className="break-all text-center font-mono text-[10px] text-[#828c94]">{PAGE_URL}</p>
+            <button
+              type="button"
+              onClick={copyPageUrl}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-[#eaedef] bg-white px-4 py-2 text-xs font-semibold text-[#2f3438] active:bg-[#f0f4f6]"
+            >
+              {copied ? <Check size={14} className="text-[#00B8CF]" /> : <Copy size={14} />}
+              {copied ? '복사됨' : '링크 복사'}
+            </button>
+          </div>
+        </section>
 
         <div className="mt-5 space-y-2 rounded-xl bg-[#fff8e1] px-4 py-3 text-[12px] text-[#856404]">
           <p className="font-semibold">설치 전 확인</p>
