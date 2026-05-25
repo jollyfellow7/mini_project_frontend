@@ -170,6 +170,7 @@ jobs:
             tail -n 80 build-apk.log || true
           } > public/build-tail.txt
 
+          git checkout -- .
           git add public/apk/ public/build-tail.txt
           if git diff --staged --quiet; then
             echo "::error::APK was not staged"
@@ -180,7 +181,7 @@ jobs:
           REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
-            git rebase origin/main
+            git rebase --autostash origin/main
             if git push "$REMOTE" HEAD:main; then
               echo "push succeeded on attempt ${attempt}"
               exit 0
@@ -348,6 +349,8 @@ jobs:
             tail -n 80 build-apk-v2.log || true
           } > public/build-tail-v2.txt
 
+          # flutter build/gradle 이 남긴 unstaged 변경을 무시 후 원하는 파일만 스테이징
+          git checkout -- .
           git add public/apk/child-v2.apk public/apk/version-child-v2.json public/build-tail-v2.txt
           if git diff --staged --quiet; then
             echo "::error::APK v2 was not staged"
@@ -358,7 +361,7 @@ jobs:
           REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
-            git rebase origin/main
+            git rebase --autostash origin/main
             if git push "$REMOTE" HEAD:main; then
               echo "push succeeded on attempt ${attempt}"
               exit 0
