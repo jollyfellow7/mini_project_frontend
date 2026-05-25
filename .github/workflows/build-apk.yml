@@ -22,7 +22,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: build-apk-v1-${{ github.repository }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     # secrets 컨텍스트는 if: 에서 직접 못 쓰므로 job-level env로 노출한 뒤 if 에서 env 검사
     env:
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -187,6 +187,7 @@ jobs:
             public/apk/version.json
 
       - name: Commit APK to repo
+        id: commit_apk_v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -213,19 +214,31 @@ jobs:
           fi
           git commit -m "chore(apk): release v1 ${APK_VERSION} [skip ci]"
 
+      - name: Push APK to main (retry)
+        id: push_apk_v1
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          for attempt in 1 2 3 4 5; do
+          for attempt in 1 2 3 4 5 6 7 8; do
             git fetch origin main
-            git rebase --autostash origin/main
+            git rebase --autostash origin/main || true
             if git push "$REMOTE" HEAD:main; then
               echo "push succeeded on attempt ${attempt}"
               exit 0
             fi
-            echo "push rejected (attempt ${attempt}/5), retrying..."
-            sleep $((attempt * 3))
+            echo "push failed (attempt ${attempt}/8) — often GitHub Internal Server Error on large APK"
+            sleep $((attempt * 8))
           done
-          echo "::error::git push failed after 5 attempts"
           exit 1
+
+      - name: APK delivery note
+        if: steps.push_apk_v1.outcome != 'success'
+        run: |
+          echo "::warning::APK v1 빌드는 성공했지만 main push 실패. Actions → Artifacts → chungsora-child-apk-v1 에서 APK 다운로드 후 public/apk/ 에 수동 반영하거나 워크플로 재실행."
+          echo "## APK v1 built — git push failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Download **chungsora-child-apk-v1** from this run Artifacts, then re-run workflow when GitHub is healthy." >> "$GITHUB_STEP_SUMMARY"
 
 # ─────────────────────────────────────────────────────────────
 # JOB 2: mini_flutter_v2 — WebView + FCM · 자녀 앱 v2
@@ -234,7 +247,7 @@ jobs:
     runs-on: ubuntu-latest
     concurrency:
       group: build-apk-v2-${{ github.repository }}
-      cancel-in-progress: true
+      cancel-in-progress: false
     # secrets 컨텍스트는 if: 에서 직접 못 쓰므로 job-level env로 노출한 뒤 if 에서 env 검사
     env:
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -404,6 +417,7 @@ jobs:
             public/apk/version-child-v2.json
 
       - name: Commit APK v2 to repo
+        id: commit_apk_v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -420,8 +434,6 @@ jobs:
             tail -n 80 build-apk-v2.log || true
           } > public/build-tail-v2.txt
 
-          # flutter build/gradle 이 mini_flutter_v2/ 에 남긴 변경만 초기화
-          # (public/apk/ 의 새 APK 파일은 건드리지 않음)
           git checkout -- mini_flutter_v2/ || true
           git add public/apk/child-v2.apk public/apk/version-child-v2.json public/build-tail-v2.txt
           if git diff --staged --quiet; then
@@ -430,16 +442,28 @@ jobs:
           fi
           git commit -m "chore(apk): release v2 ${APK_V2_VERSION} [skip ci]"
 
+      - name: Push APK v2 to main (retry)
+        id: push_apk_v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
           REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
-          for attempt in 1 2 3 4 5; do
+          for attempt in 1 2 3 4 5 6 7 8; do
             git fetch origin main
-            git rebase --autostash origin/main
+            git rebase --autostash origin/main || true
             if git push "$REMOTE" HEAD:main; then
               echo "push succeeded on attempt ${attempt}"
               exit 0
             fi
-            echo "push rejected (attempt ${attempt}/5), retrying..."
-            sleep $((attempt * 3))
+            echo "push failed (attempt ${attempt}/8) — often GitHub Internal Server Error on large APK"
+            sleep $((attempt * 8))
           done
-          echo "::error::git push failed after 5 attempts"
           exit 1
+
+      - name: APK v2 delivery note
+        if: steps.push_apk_v2.outcome != 'success'
+        run: |
+          echo "::warning::APK v2 빌드는 성공했지만 main push 실패. Actions → Artifacts → chungsora-child-apk-v2 에서 child-v2.apk 다운로드."
+          echo "## APK v2 built — git push failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "Download **chungsora-child-apk-v2** from Artifacts. install from https://www.mini3.cloud/download3 after manual push or re-run." >> "$GITHUB_STEP_SUMMARY"
