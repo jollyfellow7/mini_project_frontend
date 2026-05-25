@@ -29,6 +29,11 @@ export default function ChildLockPage() {
   const [phoneModalOpen, setPhoneModalOpen] = useState(false);
   const [allowedNumbers, setAllowedNumbers] = useState<{ name: string; number: string }[]>([]);
 
+  // Flutter WebView 잠금 화면 진입 시 native 오버레이 활성화 (Device Owner 불필요)
+  useEffect(() => {
+    postToNative('lock');
+  }, []);
+
   useEffect(() => {
     const sync = () => {
       void fetchLockPolicy()
