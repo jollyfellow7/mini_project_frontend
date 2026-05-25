@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { fetchLogCalendar } from '@/lib/chungsora/clientApi';
+import { fetchLogCalendar, type LogCalendarResponse } from '@/lib/chungsora/clientApi';
 import { toLogDateParam } from '@/lib/chungsora/logV2';
 import { setRole, type ChungsoraRole } from '@/lib/chungsora/role';
 import { deferEffect } from '@/lib/react/deferEffect';
@@ -15,8 +15,24 @@ type CleaningCalendarProps = {
   role?: ChungsoraRole;
 };
 
+function normalizeDateKey(item: LogCalendarResponse['dates'][number]): string | null {
+  if (typeof item === 'string') {
+    return /^\d{4}-\d{2}-\d{2}$/.test(item) ? item : null;
+  }
+  const date = item.date ?? item.log_date ?? item.ymd;
+  return typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null;
+}
+
+function toDateSet(items: LogCalendarResponse['dates']) {
+  const out = new Set<string>();
+  for (const item of items ?? []) {
+    const key = normalizeDateKey(item);
+    if (key) out.add(key);
+  }
+  return out;
+}
+
 export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: CleaningCalendarProps) {
-  // useState 초기화 함수로 안정적인 참조 확보 — 매 렌더마다 new Date() 재생성 방지
   const [now] = useState(() => new Date());
   const [viewYear, setViewYear] = useState(now.getFullYear());
   const [viewMonth, setViewMonth] = useState(now.getMonth() + 1);
@@ -26,14 +42,13 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
   const loadCalendar = useCallback(async () => {
     try {
       const res = await fetchLogCalendar(viewYear, viewMonth);
-      setCleanedSet(new Set(res.dates ?? []));
-      if (res.points) setMonthPoints(res.points);
+      setCleanedSet(toDateSet(res.dates ?? []));
+      setMonthPoints(typeof res.points === 'number' ? res.points : pointsProp);
     } catch {
       setCleanedSet(new Set());
       setMonthPoints(0);
     }
-    // now·pointsProp 는 loadCalendar 내부에서 사용하지 않으므로 의존 배열에서 제외
-  }, [viewYear, viewMonth]);
+  }, [viewYear, viewMonth, pointsProp]);
 
   useEffect(() => {
     deferEffect(() => {
@@ -41,14 +56,13 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
     });
   }, [loadCalendar]);
 
-  const { cells } = useMemo(() => {
+  const cells = useMemo(() => {
     const firstDay = new Date(viewYear, viewMonth - 1, 1).getDay();
     const daysInMonth = new Date(viewYear, viewMonth, 0).getDate();
-
     const result: (number | null)[] = [];
     for (let i = 0; i < firstDay; i++) result.push(null);
     for (let d = 1; d <= daysInMonth; d++) result.push(d);
-    return { cells: result };
+    return result;
   }, [viewYear, viewMonth]);
 
   const isTodayDate = (day: number) =>
@@ -61,8 +75,7 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
   };
 
   const handleDayClick = () => {
-    if (role === 'child') setRole('child');
-    else setRole('parent');
+    setRole(role === 'child' ? 'child' : 'parent');
   };
 
   return (
@@ -122,7 +135,7 @@ export function CleaningCalendar({ points: pointsProp = 0, role = 'parent' }: Cl
               className={`flex aspect-square flex-col items-center justify-center rounded-lg text-xs transition-colors ${cellClass}`}
             >
               <span>{day}</span>
-              {cleaned && !isToday && <span className="text-[9px] leading-none">✓</span>}
+              {cleaned && !isToday ? <span className="text-[9px] leading-none">✓</span> : null}
             </Link>
           );
         })}

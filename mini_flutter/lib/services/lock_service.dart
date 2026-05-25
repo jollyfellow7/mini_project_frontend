@@ -87,7 +87,7 @@ class LockService extends ChangeNotifier {
     await LockBridge.syncPolicy(
       lockTime: _policy!.lockTime,
       lockDays: _policy!.lockDays,
-      allowlist: _policy!.allowlist,
+      allowlist: _policy!.resolveAllowlist(),
       allowPhone: _policy!.allowPhone,
       unlockedDate: unlocked,
       paired: _paired,
@@ -160,7 +160,7 @@ class LockService extends ChangeNotifier {
       await LockBridge.syncPolicy(
         lockTime: _policy!.lockTime,
         lockDays: _policy!.lockDays,
-        allowlist: _policy!.allowlist,
+        allowlist: _policy!.resolveAllowlist(),
         allowPhone: _policy!.allowPhone,
         unlockedDate: today,
         paired: _paired,

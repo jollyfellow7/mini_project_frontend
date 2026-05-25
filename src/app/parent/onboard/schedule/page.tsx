@@ -16,7 +16,7 @@ function parseLockDays(value: string): string[] {
   return value
     .split(/[,\s·/|]+/)
     .map((v) => v.trim())
-    .filter((v) => WEEKDAYS.includes(v as (typeof WEEKDAYS)[number]));
+    .filter((v): v is (typeof WEEKDAYS)[number] => WEEKDAYS.includes(v as (typeof WEEKDAYS)[number]));
 }
 
 function formatLockDays(days: string[]): string {

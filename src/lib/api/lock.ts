@@ -4,9 +4,11 @@ import { authHeaders } from '@/lib/api/authSession';
 export type LockPolicy = {
   lock_time: string;
   lock_days: string;
+  lock_dates?: string;
   pass_score: number;
   allow_phone: boolean;
   allowlist: string[];
+  allowed_numbers?: { name: string; number: string }[];
 };
 
 export async function fetchLockPolicy() {

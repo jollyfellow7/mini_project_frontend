@@ -27,6 +27,7 @@ type CleaningSessionState = {
   setScanResult: (items: QuestItem[], pollution: number, summary: string) => void;
   toggleQuestItem: (id: string) => void;
   setVerifyResult: (cleanliness: number, comment: string) => void;
+  setStreakDays: (days: number) => void;
   resetSession: () => void;
   allQuestDone: () => boolean;
 };
@@ -57,8 +58,9 @@ export const useCleaningSessionStore = create<CleaningSessionState>()(
         })),
       setVerifyResult: (cleanliness, comment) =>
         set({ cleanliness, verifyComment: comment, phase: 'unlock' }),
+      setStreakDays: (days) => set({ streakDays: Math.max(0, days) }),
       resetSession: () =>
-        set({
+        set((s) => ({
           phase: 'idle',
           questItems: [],
           pollutionLevel: 0,
@@ -66,7 +68,8 @@ export const useCleaningSessionStore = create<CleaningSessionState>()(
           hasScanResult: false,
           cleanliness: 0,
           verifyComment: '',
-        }),
+          streakDays: s.streakDays,
+        })),
       allQuestDone: () => {
         const items = get().questItems;
         return items.length > 0 && items.every((q) => q.done);

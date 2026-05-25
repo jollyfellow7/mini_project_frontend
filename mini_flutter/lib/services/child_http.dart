@@ -18,5 +18,7 @@ Future<http.Response> childAuthorizedRequest(
 
   token = await SessionStore.getDeviceToken();
   if (token == null || token.isEmpty) throw ApiException('not_paired');
-  return request(token);
+  res = await request(token);
+  if (res.statusCode == 401) throw ApiException('unauthorized');
+  return res;
 }

@@ -23,6 +23,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-pretendard);
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* 모바일 300ms 탭 딜레이 제거 + 스크롤 충돌 방지 */

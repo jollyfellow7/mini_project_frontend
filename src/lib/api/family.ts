@@ -9,7 +9,9 @@ export type FamilySummary = {
   streak_mult: number;
   lock_time: string;
   lock_days: string;
+  lock_dates?: string;
   pass_score: number;
+  allowed_numbers?: { name: string; number: string }[];
   onboard_done: boolean;
   today_score: number;
   baseline_url: string | null;

@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { MissionStepper } from '@/components/chungsora/MissionStepper';
 import { CoachAvatar } from '@/components/chungsora/CoachAvatar';
 import { fetchFamilySummary, fetchLockPolicy } from '@/lib/chungsora/clientApi';
@@ -23,7 +24,9 @@ export default function ChildLockPage() {
   const setAllowPhone = useSettingsStore((s) => s.setAllowPhone);
   const setCoachIds = useSettingsStore((s) => s.setCoachIds);
   const setPhase = useCleaningSessionStore((s) => s.setPhase);
-  const [coachId, setCoachId] = useState<CoachCharacterId>('mentor');
+  const [coachId, setCoachId] = useState<CoachCharacterId>('jiu');
+  const [phoneModalOpen, setPhoneModalOpen] = useState(false);
+  const [allowedNumbers, setAllowedNumbers] = useState<{ name: string; number: string }[]>([]);
 
   useEffect(() => {
     const sync = () => {
@@ -33,6 +36,12 @@ export default function ChildLockPage() {
           setLockDays(p.lock_days);
           setPassScore(p.pass_score);
           setAllowPhone(p.allow_phone);
+          setAllowedNumbers(
+            Array.isArray(p.allowed_numbers)
+              ? p.allowed_numbers
+                  .filter((v): v is { name: string; number: string } => !!v && typeof v.name === 'string' && typeof v.number === 'string')
+              : [],
+          );
         })
         .catch(() => undefined);
       void fetchFamilySummary()
@@ -57,6 +66,13 @@ export default function ChildLockPage() {
 
   return (
     <div className="flex min-h-dvh flex-col">
+      <button
+        type="button"
+        onClick={() => setPhoneModalOpen(true)}
+        className="fixed right-3 top-3 z-50 rounded-full bg-white/15 px-3 py-1.5 text-xs font-bold text-white backdrop-blur"
+      >
+        📞 전화
+      </button>
       <MissionStepper current={1} />
       <div className="mx-auto flex max-w-lg flex-1 flex-col items-center justify-center bg-[#2f3438] px-6 py-10 text-center text-white">
         <p className="rounded-full bg-[#f04452] px-4 py-1 text-xs font-bold">잠금 ON</p>
@@ -78,6 +94,47 @@ export default function ChildLockPage() {
           오늘 방 청소 미션
         </Link>
       </div>
+
+      {phoneModalOpen
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[80] flex items-center justify-center bg-black/60 px-4"
+              onClick={() => setPhoneModalOpen(false)}
+            >
+              <div
+                className="w-full max-w-sm rounded-2xl bg-white p-4"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <p className="text-base font-bold text-[#2f3438]">긴급전화</p>
+                <ul className="mt-3 space-y-2">
+                  {[
+                    { name: '119 (소방·구급)', number: '119' },
+                    { name: '112 (경찰)', number: '112' },
+                    { name: '120 (다산콜)', number: '120' },
+                    ...allowedNumbers,
+                  ].map((n) => (
+                    <li key={`${n.name}-${n.number}`}>
+                      <a
+                        href={`tel:${n.number}`}
+                        className="block rounded-lg bg-[#f7f9fa] px-3 py-3 text-sm text-[#2f3438]"
+                      >
+                        {n.name} · <span className="font-bold text-[#00b8cf]">{n.number}</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                <button
+                  type="button"
+                  onClick={() => setPhoneModalOpen(false)}
+                  className="mt-4 w-full rounded-lg bg-[#2f3438] py-2.5 text-sm font-bold text-white"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </div>
   );
 }

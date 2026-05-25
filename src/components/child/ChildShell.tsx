@@ -10,6 +10,7 @@ import { setRole } from '@/lib/chungsora/role';
 import { useChildSessionHydrate } from '@/lib/chungsora/useChildSessionHydrate';
 import { ChildBottomNav } from './ChildBottomNav';
 import { useStopCoachOnLeaveCapture } from '@/lib/chungsora/coachSpeechGuard';
+import { useLockState } from '@/lib/chungsora/useLockState';
 
 const FLOW_PREFIXES = [
   '/child/lock',
@@ -29,7 +30,9 @@ export function ChildShell({ children }: { children: React.ReactNode }) {
   const hydrated = useAuthHydrated();
   useChildSessionHydrate();
   const childPaired = useAuthStore((s) => s.childPaired);
-  const hideNav = FLOW_PREFIXES.some((p) => pathname.startsWith(p));
+  const isLocked = useLockState();
+  const isFlowPath = FLOW_PREFIXES.some((p) => pathname.startsWith(p));
+  const hideNav = isFlowPath || isLocked;
 
   useEffect(() => {
     if (!hydrated) return;

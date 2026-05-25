@@ -12,9 +12,9 @@ export default function ParentMorePage() {
   const router = useRouter();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
-  const lockTime   = useSettingsStore((s) => s.lockTime);
-  const lockDays   = useSettingsStore((s) => s.lockDays);
-  const passScore  = useSettingsStore((s) => s.passScore);
+  const lockTime = useSettingsStore((s) => s.lockTime);
+  const lockDays = useSettingsStore((s) => s.lockDays);
+  const passScore = useSettingsStore((s) => s.passScore);
   const allowPhone = useSettingsStore((s) => s.allowPhone);
   const setLockTime = useSettingsStore((s) => s.setLockTime);
   const setLockDays = useSettingsStore((s) => s.setLockDays);
@@ -32,24 +32,24 @@ export default function ParentMorePage() {
       .catch(() => undefined);
   }, [setLockTime, setLockDays, setPassScore, setAllowPhone]);
 
-  const ROWS = [
+  const rows = [
     {
       section: '청소 · 잠금',
       items: [
-        { label: '청소 스케줄',          href: '/parent/more/schedule', trailing: `${lockDays} ${lockTime}` },
-        { label: '잠금 해제 기준',        href: '/parent/more/lock',     trailing: `${passScore}점` },
-        { label: '잠금 중 허용',          href: '/parent/more/lock',     trailing: allowPhone ? '전화 ON' : '전화 OFF' },
+        { label: '청소 스케줄', href: '/parent/more/schedule', trailing: `${lockDays} ${lockTime}` },
+        { label: '잠금 해제 기준', href: '/parent/more/lock', trailing: `${passScore}점` },
+        { label: '잠금 중 허용', href: '/parent/more/lock', trailing: allowPhone ? '전화 ON' : '전화 OFF' },
         { label: '자녀 관리 · 연결 코드', href: '/parent/more/pair' },
         { label: '새 휴대폰 연결 (폰 교체)', href: '/parent/pair/relink' },
-        { label: '커스텀 칭찬 관리',      href: '/parent/more/praise' },
+        { label: '커스텀 칭찬 관리', href: '/parent/more/praise' },
       ],
     },
     {
       section: '앱 · 계정',
       items: [
-        { label: '알림 설정',         href: '/parent/more/notifications' },
-        { label: '로그아웃',          action: 'logout' as const },
-        { label: '버전',              trailing: '1.0.0' },
+        { label: '알림 설정', href: '/parent/more/notifications' },
+        { label: '로그아웃', action: 'logout' as const },
+        { label: '버전', trailing: '1.0.0' },
         { label: '이용약관 · 개인정보', href: '/parent/more/legal' },
       ],
     },
@@ -68,9 +68,9 @@ export default function ParentMorePage() {
       </header>
 
       <div className="flex flex-col gap-4 px-5 pb-6">
-        {ROWS.map(({ section, items }) => (
+        {rows.map(({ section, items }) => (
           <div key={section} className="ch-card overflow-hidden">
-            <p className="border-b border-[#f0f2f4] px-4 py-3 text-[11px] font-medium tracking-wide text-[#adb5bd] uppercase">
+            <p className="border-b border-[#f0f2f4] px-4 py-3 text-[11px] font-medium uppercase tracking-wide text-[#adb5bd]">
               {section}
             </p>
             <ul>
@@ -113,10 +113,9 @@ export default function ParentMorePage() {
         ))}
       </div>
 
-      {/* 로그아웃 확인 모달 */}
-      {showLogoutConfirm && (
+      {showLogoutConfirm ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 px-4 pb-8"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40 px-4"
           onClick={() => setShowLogoutConfirm(false)}
         >
           <div
@@ -125,11 +124,9 @@ export default function ParentMorePage() {
           >
             <div className="px-5 pb-2 pt-6 text-center">
               <p className="text-[17px] font-bold text-[#1a1e22]">로그아웃할까요?</p>
-              <p className="mt-1.5 text-[14px] text-[#828c94]">
-                로그아웃해도 데이터는 유지돼요.
-              </p>
+              <p className="mt-1.5 text-[14px] text-[#828c94]">로그아웃해도 데이터는 유지돼요.</p>
             </div>
-            <div className="flex divide-x divide-[#f0f2f4] border-t border-[#f0f2f4] mt-4">
+            <div className="mt-4 flex divide-x divide-[#f0f2f4] border-t border-[#f0f2f4]">
               <button
                 type="button"
                 onClick={() => setShowLogoutConfirm(false)}
@@ -147,7 +144,7 @@ export default function ParentMorePage() {
             </div>
           </div>
         </div>
-      )}
+      ) : null}
     </>
   );
 }
