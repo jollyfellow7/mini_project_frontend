@@ -29,7 +29,6 @@ export function stopCoachSpeech(): void {
   const syn = window.speechSynthesis;
   syn.pause();
   syn.cancel();
-  // iOS/Android: 큐에 남은 발화 제거
   for (let i = 0; i < 8 && (syn.speaking || syn.pending); i += 1) {
     syn.cancel();
   }
@@ -45,10 +44,6 @@ function utterance(text: string, rate = DEFAULT_RATE): SpeechSynthesisUtterance 
   return u;
 }
 
-/**
- * iOS/Android TTS 엔진 사전 깨우기 — volume=0 무음 utterance 로 엔진 초기화.
- * 컴포넌트 mount useEffect 에서 호출하면 실제 speak() 시 첫-클릭 묵음 현상 방지.
- */
 export function primeSpeechSynthesis(): void {
   if (typeof window === 'undefined' || !window.speechSynthesis) return;
   window.speechSynthesis.getVoices();
@@ -59,11 +54,6 @@ export function primeSpeechSynthesis(): void {
   window.speechSynthesis.cancel();
 }
 
-/**
- * Web Speech API 기반 코치 TTS + 자막.
- * - cancel 후 짧은 지연으로 겹침·iOS 끊김 완화
- * - 연속 호출은 마지막 문장만 재생
- */
 export function useCoachSpeech(enabled: boolean) {
   const [subtitle, setSubtitle] = useState('');
   const enabledRef = useRef(enabled);

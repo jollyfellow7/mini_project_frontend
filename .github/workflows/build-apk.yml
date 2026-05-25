@@ -1,4 +1,4 @@
-# Frontend repo must include mini_flutter/ at repository root.
+# mini_flutter/ 및 mini_flutter_v2/ 빌드 — frontend repo 에 포함
 
 name: Flutter APK build (frontend repo)
 
@@ -7,19 +7,26 @@ on:
     branches: [main]
     paths:
       - 'mini_flutter/**'
+      - 'mini_flutter_v2/**'
       - '.github/workflows/build-apk.yml'
   workflow_dispatch:
 
 permissions:
   contents: write
 
-concurrency:
-  group: build-apk-${{ github.repository }}
-  cancel-in-progress: false
-
+# ─────────────────────────────────────────────────────────────
+# JOB 1: mini_flutter (v1) — Flutter 네이티브 · 기존 자녀 앱
+# ─────────────────────────────────────────────────────────────
 jobs:
   build-apk:
     runs-on: ubuntu-latest
+    concurrency:
+      group: build-apk-v1-${{ github.repository }}
+      cancel-in-progress: true
+    # secrets 컨텍스트는 if: 에서 직접 못 쓰므로 job-level env로 노출한 뒤 if 에서 env 검사
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
     steps:
       - uses: actions/checkout@v4
         with:
@@ -71,6 +78,38 @@ jobs:
       - working-directory: mini_flutter
         run: flutter create . --platforms=android --org com.chungsora --project-name chungsora_child
 
+      - name: Inject Keystore signing (v1)
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | tr -d '\n\r ' | base64 -d > mini_flutter/android/chungsora-release.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../chungsora-release.jks\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEYSTORE_ALIAS" \
+            > mini_flutter/android/key.properties
+          python3 - << 'PYEOF'
+          import sys
+          path = 'mini_flutter/android/app/build.gradle.kts'
+          with open(path, 'r') as f:
+              c = f.read()
+          imports = 'import java.util.Properties\nimport java.io.FileInputStream\n\n'
+          if 'import java.util.Properties' not in c:
+              c = imports + c
+          key_loading = '\nval keyPropertiesFile = rootProject.file("key.properties")\nval keyProperties = Properties()\nif (keyPropertiesFile.exists()) {\n    keyProperties.load(FileInputStream(keyPropertiesFile))\n}\n'
+          if 'keyPropertiesFile' not in c:
+              c = c.replace('\nandroid {', key_loading + '\nandroid {', 1)
+          signing_block = '    signingConfigs {\n        if (keyPropertiesFile.exists()) {\n            create("release") {\n                keyAlias = keyProperties["keyAlias"] as String\n                keyPassword = keyProperties["keyPassword"] as String\n                storeFile = file(keyProperties["storeFile"] as String)\n                storePassword = keyProperties["storePassword"] as String\n            }\n        }\n    }\n'
+          if 'signingConfigs' not in c:
+              c = c.replace('    defaultConfig {', signing_block + '    defaultConfig {', 1)
+          c = c.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = if (keyPropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")')
+          with open(path, 'w') as f:
+              f.write(c)
+          print("v1 signing config patched")
+          PYEOF
+
       - working-directory: mini_flutter
         run: flutter pub get
 
@@ -94,7 +133,7 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: build-apk-log
+          name: build-apk-v1-log
           path: build-apk.log
           retention-days: 14
 
@@ -103,7 +142,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "## Flutter APK build failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "## Flutter APK v1 build failed" >> "$GITHUB_STEP_SUMMARY"
           echo '```' >> "$GITHUB_STEP_SUMMARY"
           grep -E "e: file://|error •|FAILURE:|What went wrong|Compilation error" build-apk.log | tail -n 40 >> "$GITHUB_STEP_SUMMARY" || true
           echo '```' >> "$GITHUB_STEP_SUMMARY"
@@ -142,12 +181,12 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: chungsora-child-apk
+          name: chungsora-child-apk-v1
           path: |
             public/apk/app-release.apk
             public/apk/version.json
 
-      - name: Commit build-tail and public/apk
+      - name: Commit APK to repo
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -166,17 +205,234 @@ jobs:
             tail -n 80 build-apk.log || true
           } > public/build-tail.txt
 
+          git checkout -- mini_flutter/ || true
           git add public/apk/ public/build-tail.txt
           if git diff --staged --quiet; then
             echo "::error::APK was not staged"
             exit 1
           fi
-          git commit -m "chore(apk): release ${APK_VERSION} [skip ci]"
+          git commit -m "chore(apk): release v1 ${APK_VERSION} [skip ci]"
 
           REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
           for attempt in 1 2 3 4 5; do
             git fetch origin main
-            git rebase origin/main
+            git rebase --autostash origin/main
+            if git push "$REMOTE" HEAD:main; then
+              echo "push succeeded on attempt ${attempt}"
+              exit 0
+            fi
+            echo "push rejected (attempt ${attempt}/5), retrying..."
+            sleep $((attempt * 3))
+          done
+          echo "::error::git push failed after 5 attempts"
+          exit 1
+
+# ─────────────────────────────────────────────────────────────
+# JOB 2: mini_flutter_v2 — WebView + FCM · 자녀 앱 v2
+# ─────────────────────────────────────────────────────────────
+  build-apk-v2:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build-apk-v2-${{ github.repository }}
+      cancel-in-progress: true
+    # secrets 컨텍스트는 if: 에서 직접 못 쓰므로 job-level env로 노출한 뒤 if 에서 env 검사
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Check mini_flutter_v2 directory
+        run: test -d mini_flutter_v2 || (echo "::error::mini_flutter_v2/ is required at repo root" && exit 1)
+
+      # Firebase google-services.json 주입 (GitHub Secret: GOOGLE_SERVICES_JSON_V2)
+      - name: Inject google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON_V2 }}
+        run: |
+          if [ -z "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::error::Secret GOOGLE_SERVICES_JSON_V2 is not set. Add it in GitHub → Settings → Secrets."
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON" > mini_flutter_v2/android/app/google-services.json
+          echo "google-services.json injected"
+
+      - name: Sync Android Gradle from Flutter stable (v2)
+        run: |
+          set -e
+          # 커스텀 파일 백업
+          cp mini_flutter_v2/android/app/src/main/AndroidManifest.xml /tmp/v2_manifest.xml
+          cp -r mini_flutter_v2/android/app/src/main/kotlin/com/chungsora/child /tmp/v2_kotlin
+          cp mini_flutter_v2/android/app/src/main/res/xml/device_admin.xml /tmp/v2_device_admin.xml 2>/dev/null || true
+
+          # Flutter stable 기준 Gradle 파일 생성
+          flutter create /tmp/chungsora_v2_ref --org com.chungsora --project-name chungsora_child_v2 --platforms android
+          REF=/tmp/chungsora_v2_ref/android
+          DST=mini_flutter_v2/android
+
+          cp "$REF/settings.gradle.kts" "$DST/settings.gradle.kts"
+          cp "$REF/gradle/wrapper/"* "$DST/gradle/wrapper/"
+          cp "$REF/gradlew" "$DST/gradlew"
+          cp "$REF/gradlew.bat" "$DST/gradlew.bat"
+          cp "$REF/build.gradle.kts" "$DST/build.gradle.kts"
+          cp "$REF/gradle.properties" "$DST/gradle.properties"
+          cp "$REF/app/build.gradle.kts" "$DST/app/build.gradle.kts"
+          mkdir -p "$DST/app/src/main/res"
+          cp -r "$REF/app/src/main/res/"* "$DST/app/src/main/res/"
+
+          # 커스텀 파일 복원
+          cp /tmp/v2_manifest.xml "$DST/app/src/main/AndroidManifest.xml"
+          cp -r /tmp/v2_kotlin/* "$DST/app/src/main/kotlin/com/chungsora/child/"
+          mkdir -p "$DST/app/src/main/res/xml"
+          test -f /tmp/v2_device_admin.xml && cp /tmp/v2_device_admin.xml "$DST/app/src/main/res/xml/device_admin.xml"
+
+          # applicationId·minSdk·Firebase 플러그인 패치
+          sed -i 's/com\.chungsora\.chungsora_child_v2/com.chungsora.child_v2/g' "$DST/app/build.gradle.kts"
+          sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/' "$DST/app/build.gradle.kts"
+          sed -i 's/org.jetbrains.kotlin.android") version "[^"]*"/org.jetbrains.kotlin.android") version "1.9.24"/' "$DST/settings.gradle.kts"
+
+          # settings.gradle.kts에 google-services 플러그인 추가
+          sed -i '/id("com.android.application") version/a\    id("com.google.gms.google-services") version "4.4.2" apply false' "$DST/settings.gradle.kts"
+
+          # app/build.gradle.kts에 firebase 플러그인·의존성 추가
+          sed -i '/id("dev.flutter.flutter-gradle-plugin")/a\    id("com.google.gms.google-services")' "$DST/app/build.gradle.kts"
+
+          chmod +x "$DST/gradlew"
+          flutter --version
+
+      - name: Inject Keystore signing (v2)
+        if: ${{ env.KEYSTORE_BASE64 != '' }}
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_BASE64" | tr -d '\n\r ' | base64 -d > mini_flutter_v2/android/chungsora-release.jks
+          printf 'storePassword=%s\nkeyPassword=%s\nkeyAlias=%s\nstoreFile=../chungsora-release.jks\n' \
+            "$KEYSTORE_PASSWORD" "$KEY_PASSWORD" "$KEYSTORE_ALIAS" \
+            > mini_flutter_v2/android/key.properties
+          python3 - << 'PYEOF'
+          import sys
+          path = 'mini_flutter_v2/android/app/build.gradle.kts'
+          with open(path, 'r') as f:
+              c = f.read()
+          imports = 'import java.util.Properties\nimport java.io.FileInputStream\n\n'
+          if 'import java.util.Properties' not in c:
+              c = imports + c
+          key_loading = '\nval keyPropertiesFile = rootProject.file("key.properties")\nval keyProperties = Properties()\nif (keyPropertiesFile.exists()) {\n    keyProperties.load(FileInputStream(keyPropertiesFile))\n}\n'
+          if 'keyPropertiesFile' not in c:
+              c = c.replace('\nandroid {', key_loading + '\nandroid {', 1)
+          signing_block = '    signingConfigs {\n        if (keyPropertiesFile.exists()) {\n            create("release") {\n                keyAlias = keyProperties["keyAlias"] as String\n                keyPassword = keyProperties["keyPassword"] as String\n                storeFile = file(keyProperties["storeFile"] as String)\n                storePassword = keyProperties["storePassword"] as String\n            }\n        }\n    }\n'
+          if 'signingConfigs' not in c:
+              c = c.replace('    defaultConfig {', signing_block + '    defaultConfig {', 1)
+          c = c.replace('signingConfig = signingConfigs.getByName("debug")', 'signingConfig = if (keyPropertiesFile.exists()) signingConfigs.getByName("release") else signingConfigs.getByName("debug")')
+          with open(path, 'w') as f:
+              f.write(c)
+          print("v2 signing config patched")
+          PYEOF
+
+      - working-directory: mini_flutter_v2
+        run: flutter pub get
+
+      - name: Dart analyze (v2)
+        working-directory: mini_flutter_v2
+        run: |
+          flutter analyze 2>&1 | tee ../analyze-v2.log
+          if grep -q "error •" ../analyze-v2.log; then
+            grep "error •" ../analyze-v2.log
+            exit 1
+          fi
+
+      - name: Build APK v2
+        working-directory: mini_flutter_v2
+        run: |
+          set -o pipefail
+          flutter build apk --release --verbose 2>&1 | tee ../build-apk-v2.log
+          test -f build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-apk-v2-log
+          path: build-apk-v2.log
+          retention-days: 14
+
+      - run: mkdir -p public/apk
+
+      - name: Copy APK v2
+        run: |
+          cp mini_flutter_v2/build/app/outputs/flutter-apk/app-release.apk public/apk/child-v2.apk
+          VERSION=$(grep '^version:' mini_flutter_v2/pubspec.yaml | sed 's/version: //' | tr -d ' ')
+          VER_NAME="${VERSION%%+*}"
+          VER_CODE="${VERSION##*+}"
+          APK_PATH="public/apk/child-v2.apk"
+          APK_SIZE=$(stat -c%s "$APK_PATH" 2>/dev/null || stat -f%z "$APK_PATH")
+          cat > public/apk/version-child-v2.json << EOF
+          {
+            "version": "${VER_NAME}",
+            "build_number": "${VER_CODE}",
+            "built_at": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "commit": "${{ github.sha }}",
+            "package": "com.chungsora.child_v2",
+            "apk_size_bytes": ${APK_SIZE}
+          }
+          EOF
+          echo "APK_V2_VERSION=${VER_NAME}" >> "$GITHUB_ENV"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: chungsora-child-apk-v2
+          path: |
+            public/apk/child-v2.apk
+            public/apk/version-child-v2.json
+
+      - name: Commit APK v2 to repo
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          {
+            echo "=== Dart analyze errors ==="
+            grep "error •" analyze-v2.log 2>/dev/null || true
+            echo "=== Gradle errors ==="
+            grep -E "^(FAILURE:|\\* What went wrong|Execution failed|e: file|error: )" build-apk-v2.log 2>/dev/null || true
+            echo ""
+            echo "=== Last 80 lines ==="
+            tail -n 80 build-apk-v2.log || true
+          } > public/build-tail-v2.txt
+
+          # flutter build/gradle 이 mini_flutter_v2/ 에 남긴 변경만 초기화
+          # (public/apk/ 의 새 APK 파일은 건드리지 않음)
+          git checkout -- mini_flutter_v2/ || true
+          git add public/apk/child-v2.apk public/apk/version-child-v2.json public/build-tail-v2.txt
+          if git diff --staged --quiet; then
+            echo "::error::APK v2 was not staged"
+            exit 1
+          fi
+          git commit -m "chore(apk): release v2 ${APK_V2_VERSION} [skip ci]"
+
+          REMOTE="https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git rebase --autostash origin/main
             if git push "$REMOTE" HEAD:main; then
               echo "push succeeded on attempt ${attempt}"
               exit 0

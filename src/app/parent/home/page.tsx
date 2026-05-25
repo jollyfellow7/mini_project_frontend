@@ -71,8 +71,8 @@ export default function ParentHomePage() {
           <div className="mx-5 h-px bg-[#f0f2f4]" />
 
           <div className="grid grid-cols-3 divide-x divide-[#f0f2f4]">
-            <div className="flex flex-col items-center gap-0.5 py-3.5">
-              <p className="text-[11px] font-medium text-[#adb5bd]">누적 포인트</p>
+            <div className="flex flex-col items-center py-3.5 gap-0.5">
+              <p className="text-[11px] font-medium text-[#adb5bd]">잔여 포인트</p>
               <p className="text-[16px] font-bold text-[#1a1e22]">{points.toLocaleString()}P</p>
             </div>
             <div className="flex flex-col items-center gap-0.5 py-3.5">

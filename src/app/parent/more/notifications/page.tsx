@@ -43,7 +43,7 @@ export default function MoreNotificationsPage() {
         ← 더보기
       </Link>
       <h1 className="mt-3 text-xl font-bold text-[#2f3438]">알림 설정</h1>
-      <p className="mt-1 text-xs text-[#828c94]">설정은 계정에 저장됩니다 (푸시는 추후 연동)</p>
+      <p className="mt-1 text-xs text-[#828c94]">앱 알림 수신 여부를 설정하세요</p>
       <div className="ch-card mt-6 divide-y divide-[#f0f2f4]">
         {LABELS.map(({ key, label }) => (
           <label key={key} className="flex items-center justify-between px-4 py-4 text-sm">

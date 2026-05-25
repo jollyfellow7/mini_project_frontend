@@ -22,13 +22,13 @@ class LockPolicy {
       allowlist: (json['allowlist'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
-          const ['dialer', 'com.chungsora.child'],
+          const ['dialer', 'com.chungsora.child_v2'],
     );
   }
 
   /// OS Lock Task용 패키지·별칭 목록
   List<String> resolveAllowlist() {
-    final out = <String>{'com.chungsora.child', ...allowlist};
+    final out = <String>{'com.chungsora.child_v2', ...allowlist};
     if (allowPhone) {
       out.add('dialer');
       out.add('com.android.emergency');

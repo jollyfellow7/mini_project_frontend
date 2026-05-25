@@ -12,7 +12,10 @@ function PhotoSlot({ label, url }: { label: string; url: string | null }) {
         // eslint-disable-next-line @next/next/no-img-element
         <img src={url} alt={label} className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full items-center justify-center text-xs text-[#828c94]">{label}</div>
+        <div className="flex h-full flex-col items-center justify-center gap-1">
+          <p className="text-xs font-semibold text-[#828c94]">{label}</p>
+          <p className="text-[11px] text-[#b0b8be]">사진 없음</p>
+        </div>
       )}
       {url && (
         <span className="absolute bottom-1.5 left-1.5 rounded-md bg-black/50 px-1.5 py-0.5 text-[10px] font-semibold text-white">
