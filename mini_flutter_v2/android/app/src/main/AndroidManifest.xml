@@ -34,15 +34,6 @@
             </intent-filter>
         </activity>
 
-        <!-- FCM 푸시 메시지 수신 -->
-        <service
-            android:name="com.google.firebase.messaging.FirebaseMessagingService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-            </intent-filter>
-        </service>
-
         <service
             android:name=".LockMonitorService"
             android:exported="false"

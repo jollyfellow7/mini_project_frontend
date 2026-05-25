@@ -16,7 +16,7 @@ if (keyPropertiesFile.exists()) {
 }
 
 android {
-    namespace = "com.chungsora.child_v2"
+    namespace = "com.chungsora.child"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 

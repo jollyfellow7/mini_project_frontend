@@ -300,8 +300,9 @@ jobs:
           mkdir -p "$DST/app/src/main/res/xml"
           test -f /tmp/v2_device_admin.xml && cp /tmp/v2_device_admin.xml "$DST/app/src/main/res/xml/device_admin.xml"
 
-          # applicationId·minSdk·Firebase 플러그인 패치
-          sed -i 's/com\.chungsora\.chungsora_child_v2/com.chungsora.child_v2/g' "$DST/app/build.gradle.kts"
+          # applicationId만 child_v2로 패치 (namespace는 child 그대로 유지)
+          sed -i 's/applicationId = "com\.chungsora\.chungsora_child_v2"/applicationId = "com.chungsora.child_v2"/' "$DST/app/build.gradle.kts"
+          sed -i 's/namespace = "com\.chungsora\.chungsora_child_v2"/namespace = "com.chungsora.child"/' "$DST/app/build.gradle.kts"
           sed -i 's/minSdk = flutter.minSdkVersion/minSdk = 24/' "$DST/app/build.gradle.kts"
           sed -i 's/org.jetbrains.kotlin.android") version "[^"]*"/org.jetbrains.kotlin.android") version "1.9.24"/' "$DST/settings.gradle.kts"
 
